@@ -88,6 +88,11 @@ read.didson <- function(path) {
   rStart <- as.numeric(gsub(".*=|m", "", Data[widx[1]]))
   rFinish <- as.numeric(gsub(".*=|m", "", Data[widx[2]]))
 
+  factor_a <- gsub(".*= ", "", Data[grep("Factor A", Data)])
+  intensity <- gsub(".*= ", "", Data[grep("Intensity", Data)]) %>%
+    str_remove(., " dB")
+  threshold <- gsub(".*= ", "", Data[grep("Threshold", Data)]) %>%
+    str_remove(., " dB")
   observer <- gsub(".*= ", "", Data[grep("Editor ID", Data)])
   bgsub <- NA
   if (any(grepl("Background Subtraction", Data)))
@@ -154,21 +159,21 @@ read.didson <- function(path) {
   dat$FilePath <- path
   dat$bank <- bank
   dat$observer <- observer
+  if (length(factor_a) != 0) {
+    dat$factor_a <- factor_a
+  } else {
+    dat$factor_a <- NA
+  }
+  dat$intensity <- intensity
+  dat$threshold <- threshold
   dat$BGsubtraction <- bgsub
   dat$obsID <- 1:nrow(dat)
   return(dat)
 }
 
+length.data_loaded <- map(files, read.didson, .progress = TRUE)
 
-## Need to adjust this code for 2016:
-library(svMisc)
-
-length.data <- NULL
-n <- length(files)
-for (i in 1:n) {
-  length.data <- rbind(length.data, read.didson(path = files[i]))
-  progress(value = i, n, progress.bar = TRUE)
-}
+length.data <- list_rbind(length.data_loaded)
 
 library(magrittr)
 library(dplyr)
@@ -190,6 +195,36 @@ length.data <- length.data %>%
 length.data <- length.data %>%
   mutate(Sonar = ifelse(bank == "Right Bank", "RB", "LB")) %>%
   mutate(Sonar = paste0(Sonar, ifelse(Freq == "HighFreq", "HF", "LF")))
+
+length.data_export <- length.data %>%
+  select(
+    "file_number" = File,
+    "detection_number" = Total,
+    "frame_number" = FrameNo,
+    "direction" = Dir,
+    "range_m" = R.m,
+    "theta_degrees" = Theta,
+    "length_cm" = L.cm,
+    "delta_r_cm" = dR.cm,
+    "length_delta_r" = LTodR,
+    "aspect" = Aspect,
+    "detection_time" = Time,
+    "detection_date" = Date,
+    "sonar_frequency" = Freq,
+    "r_start" = rStart,
+    "r_finish" = rFinish,
+    "file_time_stamp" = FileTimeStamp,
+    factor_a,
+    intensity,
+    threshold,
+    "file_date" = FileDate,
+    "file_path" = FilePath,
+    bank,
+    "editor_id" = observer,
+    "background_subtraction" = BGsubtraction,
+    "upstream_motion" = RecorderUpstreamDirection,
+    "comments" = comment
+  )
 
 # write.csv(length.data, "QualarkLengthData2024.csv", row.names=FALSE)
 write.csv(length.data, "QualarkLengthData.csv", row.names = FALSE)
