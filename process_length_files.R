@@ -5,6 +5,12 @@
 ## Jan 2024
 ## ---------------------------------------------------
 
+library(magrittr)
+library(dplyr)
+library(ggplot2)
+library(purrr)
+library(stringr)
+
 ## Data are going to be in folders probably...?
 ## Find all paths:
 files <- list.files(
@@ -175,22 +181,8 @@ length.data_loaded <- map(files, read.didson, .progress = TRUE)
 
 length.data <- list_rbind(length.data_loaded)
 
-library(magrittr)
-library(dplyr)
-library(ggplot2)
-
 length.data <- length.data %>%
-  mutate(date = as.Date(Date, format = "%Y-%m-%d")) %>%
-  mutate(year = as.numeric(format(date, "%Y"))) %>%
   mutate(L.cm = as.numeric(L.cm))
-
-## Add a better file time stamp:
-length.data <- length.data %>%
-  mutate(
-    FileHour = substr(FileTimeStamp, 1, 2),
-    FileMin = substr(FileTimeStamp, 3, 4),
-    FileSec = substr(FileTimeStamp, 5, 6)
-  )
 
 length.data <- length.data %>%
   mutate(Sonar = ifelse(bank == "Right Bank", "RB", "LB")) %>%
@@ -226,5 +218,4 @@ length.data_export <- length.data %>%
     "comments" = comment
   )
 
-# write.csv(length.data, "QualarkLengthData2024.csv", row.names=FALSE)
-write.csv(length.data, "QualarkLengthData.csv", row.names = FALSE)
+write.csv(length.data_export, "QualarkLengthData.csv", row.names = FALSE)
