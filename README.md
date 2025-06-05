@@ -49,7 +49,7 @@ To recreate the Qualark Species Composition Database that, Pacific Salmon Commis
 ## 5. Team Roles
 
 | Role | Name | Responsibilities |
-|---------------------|------------------------|------------------------|
+|----|----|----|
 | Task Team Leads | Catarina Wor (Brooke once back from Mat Leave), Brett Johnson, Eric Taylor | Oversees project delivery, coordinates cross support |
 | Data Trustee | ? | Chairs the Data Product Governance Team. Usually a section head or higher. Coordinates with Salmon Data Domain Governance Team and the Regional Data Committee. |
 | Data Steward | Daniel | Owns the product lifecycle and ensures documentation. Typically someone with field and data skills. |
@@ -61,7 +61,7 @@ To recreate the Qualark Species Composition Database that, Pacific Salmon Commis
 ## 6. Data Product Governance Team
 
 | Role | Name | Responsibilities |
-|------------------------|------------------------|------------------------|
+|----|----|----|
 | Data Owner | [Insert Name] | Owns the data and its quality |
 | Data Trustee | Catarina Wor? Brooke? | Chairs the Data Product Governance Team |
 | Data Steward | [Insert Name] | Owns the product lifecycle and ensures documentation |
@@ -71,7 +71,7 @@ To recreate the Qualark Species Composition Database that, Pacific Salmon Commis
 ## 7. Timeline (Proposed)
 
 | Phase | Duration | Milestone |
-|------------------------|------------------------|------------------------|
+|----|----|----|
 | Kickoff and Scoping | 2 weeks | Charter signed off, roles confirmed |
 | Infrastructure Setup | 2–4 weeks | Azure workspace, data storage, GitHub repo ready |
 | Pipeline Development | 4–6 weeks | First reproducible version created |
@@ -101,7 +101,7 @@ To recreate the Qualark Species Composition Database that, Pacific Salmon Commis
 ## 10. Risks & Mitigation
 
 | Risk | Mitigation Strategy |
-|------------------------------------|------------------------------------|
+|----|----|
 | Staff bandwidth | Scope narrowly and provide flexible contribution paths |
 | Data access delays | Formalize data sharing agreements early |
 | Cloud complexity | Use DSU support and standard infrastructure templates |
