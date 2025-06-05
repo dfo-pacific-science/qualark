@@ -37,9 +37,7 @@ To recreate the Qualark Species Composition Database that, Pacific Salmon Commis
 ## 3. Objectives
 
 -   Streamline data processing and storage, improve data management efficiency, enhance data analysis capabilities in order to support species composition assessments.
--   **Development of a Centralized Database:** Create a centralized database
-    for Qualark hydroacoustic and test fishing data, consolidating data from multiple sources
-    into one unified repository.
+-   **Development of a Centralized Database:** Create a centralized database for Qualark hydroacoustic and test fishing data, consolidating data from multiple sources into one unified repository.
 -   **Integration with R:** Enable seamless integration with R for data querying, analysis, and visualization.
 -   **Data Backup and Recovery Mechanisms:** Establish robust data backup procedures and recovery mechanisms to prevent data loss and ensure data availability.
 -   **Data Management Workflow:** Define workflows where administrators manage data uploads, receive updates from crew members through Excel files. This maintains familiar processes, ensuring smooth collaboration and minimal disruptions.
@@ -59,34 +57,49 @@ To recreate the Qualark Species Composition Database that, Pacific Salmon Commis
 
 ## 5. Team Roles
 
-| Role | Name | Responsibilities |
-|----------------------|-------------------------|-------------------------|
-| Task Team Leads | Catarina Wor, Brett Johnson, Eric Taylor | Oversees project delivery, coordinates cross support |
-| Data Trustee | Catarina Wor | Data Trustees ensure the strategic management of assigned data assets as well as compliance with departmental and enterprise data-related strategies, regulations, policies, directives and standards. Chairs the Data Product Governance Team. Usually a section head or higher. Coordinates with Salmon Data Domain Governance Team and the Regional Data Committee. |
-| Data Steward | Daniel | Data Stewards maximize the quality and reusability of their assigned data asset by enforcing data management business rules. Owns the product lifecycle and ensures documentation. Typically someone with field and data skills. |
-| Data Custodian | Michael Gauthier? | Someone responsible for the data system. Will eventually manage Azure/Databricks infrastructure |
-| Data Engineers | Sai (PSC), DSU Staff | Builds ETL pipeline and manages Azure/DataBricks infrastructure |
-| Governance Liaison(s) | Brett Johnson | Coordinates with Office of the Chieft Data Steward and RegionaDC for approvals and alignment |
-
-## 6. Data Product Governance Team
-
-| Role | Name | Responsibilities |
-|------------------------|------------------------|------------------------|
-| Data Owner | [Insert Name] | Owns the data and its quality |
-| Data Trustee | Catarina Wor? Brooke? | Chairs the Data Product Governance Team |
-| Data Steward | [Insert Name] | Owns the product lifecycle and ensures documentation |
++--------------------+----------------------------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Role               | Name                                                           | Responsibilities                                                                                                                                                                                                                                                                                                                                                       |
++====================+================================================================+========================================================================================================================================================================================================================================================================================================================================================================+
+| Task Team Leads    | Brett Johnson, Eric Taylor                                     | Oversees project delivery, coordinates cross organizational collaboration and support                                                                                                                                                                                                                                                                                  |
++--------------------+----------------------------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Data Trustee       | Catarina Wor (Brooke?)                                         | Data Trustees ensure the strategic management of assigned data assets as well as compliance with departmental and enterprise data-related strategies, regulations, policies, directives and standards. Chairs the Data Product Governance Team. Usually a section head or higher. Coordinates with Salmon Data Domain Governance Team and the Regional Data Committee. |
++--------------------+----------------------------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Data Steward       | -   Daniel Doutaz (DFO FIA, Long-term maintainer)              | Data Stewards maximize the quality and reusability of their assigned data asset by enforcing data management business rules. Owns the product lifecycle and ensures documentation.                                                                                                                                                                                     |
+|                    |                                                                |                                                                                                                                                                                                                                                                                                                                                                        |
+|                    | -   Zhipeng Wu (DFO DSU, Initial development and transfer)     |                                                                                                                                                                                                                                                                                                                                                                        |
+|                    |                                                                |                                                                                                                                                                                                                                                                                                                                                                        |
+|                    | -   Albury C (DFO DSU, Initial development and transfer)       |                                                                                                                                                                                                                                                                                                                                                                        |
++--------------------+----------------------------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Data Custodians    | -   Brian Smith (DFO, Long term maintenance)                   | Data Custodians ensure the safe custody and integrity of hosted data, and safeguarding data repositories, including the design and implementation of technical solutions.                                                                                                                                                                                              |
+|                    |                                                                |                                                                                                                                                                                                                                                                                                                                                                        |
+|                    | <!-- -->                                                       |                                                                                                                                                                                                                                                                                                                                                                        |
+|                    |                                                                |                                                                                                                                                                                                                                                                                                                                                                        |
+|                    | -   Sai Chandra (Initial development and prototyping with PSC) |                                                                                                                                                                                                                                                                                                                                                                        |
++--------------------+----------------------------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Data Contributors  | Michael Arbeider                                               | Data Contributors ensure that the data they provide to the Department (including data sourced from third-parties) aligns with all technical and business policies, procedures and standards, including those defined by data stewards.                                                                                                                                 |
++--------------------+----------------------------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| Data Consumers     | -   Paul Van Dam Bates (DFO Post Doc)                          | Data Consumers ensure that their usage of data supports departmental and government objectives and mandate, including communicating regularly with data stewards on their data needs.                                                                                                                                                                                  |
+|                    |                                                                |                                                                                                                                                                                                                                                                                                                                                                        |
+|                    | -   Pacific Salmon Commission Fraser River Panel               |                                                                                                                                                                                                                                                                                                                                                                        |
++--------------------+----------------------------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 
 ------------------------------------------------------------------------
 
 ## 7. Timeline (Proposed)
 
-| Phase | Duration | Milestone |
-|------------------------|------------------------|------------------------|
-| Kickoff and Scoping | 2 weeks | Charter signed off, roles confirmed |
-| Infrastructure Setup | 2–4 weeks | Azure workspace, data storage, GitHub repo ready |
-| Pipeline Development | 4–6 weeks | First reproducible version created |
-| Governance and Standards Review | Concurrent | Schema and roles approved |
-| Final Publication & Reporting | 2–3 weeks | Output published, lessons learned shared |
++---------------------------------+----------------------+--------------------------------------------------+
+| Phase                           | Duration             | Milestone                                        |
++=================================+======================+==================================================+
+| Kickoff and Scoping             | 2 weeks              | Charter signed off, roles confirmed              |
++---------------------------------+----------------------+--------------------------------------------------+
+| Infrastructure Setup            | 2–4 weeks            | Azure workspace, data storage, GitHub repo ready |
++---------------------------------+----------------------+--------------------------------------------------+
+| Pipeline Development            | 4–6 weeks            | First reproducible version created               |
++---------------------------------+----------------------+--------------------------------------------------+
+| Governance and Standards Review | Concurrent           | Schema and roles approved                        |
++---------------------------------+----------------------+--------------------------------------------------+
+| Final Publication & Reporting   | 2–3 weeks            | Output published, lessons learned shared         |
++---------------------------------+----------------------+--------------------------------------------------+
 
 ------------------------------------------------------------------------
 
@@ -110,12 +123,17 @@ To recreate the Qualark Species Composition Database that, Pacific Salmon Commis
 
 ## 10. Risks & Mitigation
 
-| Risk | Mitigation Strategy |
-|------------------------------------|------------------------------------|
-| Staff bandwidth | Scope narrowly and provide flexible contribution paths |
-| Data access delays | Formalize data sharing agreements early |
-| Cloud complexity | Use DSU support and standard infrastructure templates |
-| Governance ambiguity | Escalate unclear decisions to RDC or OCDS early |
++----------------------------------+--------------------------------------------------------+
+| Risk                             | Mitigation Strategy                                    |
++==================================+========================================================+
+| Staff bandwidth                  | Scope narrowly and provide flexible contribution paths |
++----------------------------------+--------------------------------------------------------+
+| Data access delays               | Formalize data sharing agreements early                |
++----------------------------------+--------------------------------------------------------+
+| Cloud complexity                 | Use DSU support and standard infrastructure templates  |
++----------------------------------+--------------------------------------------------------+
+| Governance ambiguity             | Escalate unclear decisions to RDC or OCDS early        |
++----------------------------------+--------------------------------------------------------+
 
 ------------------------------------------------------------------------
 
