@@ -74,11 +74,11 @@ An important part of the long term success of a data product relates to the role
 * Clear governance structure and sustainability plan established and documented
 * Data Sharing Agreement set up with Pacific Salmon Commission staff and they are able to access outputs in near real time
 
-  ## 8. Dependencies
+## 8. Dependencies
 
-  TBD
+TBD
 
-  ## 9. Risks and Mitigations
+## 9. Risks and Mitigations
 
 |  Risk                  |  Mitigation Strategy                                     |
 | ---------------------- | -------------------------------------------------------- |
