@@ -2,5 +2,30 @@
 .Rhistory
 .RData
 .Ruserdata
-Length Measurements/*
 
+# Environment and config
+.env
+.Renviron
+
+# OS/IDE files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Local data layers (not in repo)
+data/bronze/
+data/silver/
+data/gold/
+data/sharepoint/
+
+# Logs and artifacts
+*.log
+*.tmp
+*.bak
+*.swp
+
+# R package/library caches
+/*.Rcheck/
+renv/
+packrat/
