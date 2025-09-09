@@ -1,138 +1,291 @@
-Project documents are also available on the [PSC-DFO Species Composition Review SharePoint site](https://psconline.sharepoint.com/sites/FRP_365/Species%20Composition%20Review/Forms/AllItems.aspx)
+# Qualark Data Processing Pipeline
 
-# Qualark Species Composition Reproducible Data Product Team Charter
+This project converts Azure Data Factory (ADF) JSON scripts and Logic Apps to open-source R scripts and GitHub Actions workflows, enabling you to escape Azure dependencies while maintaining the same functionality.
 
-Title: Qualark Species Composition Data System
+## Project Structure
 
-Date Initiated: 2025-04-02
+```
+qualark-demo/
+├── r/                                    # R scripts (replaces ADF)
+│   ├── config/
+│   │   └── connections.R                 # Database and storage connections
+│   ├── data_flows/                       # Data processing scripts
+│   │   ├── didson_bank_freq_to_silver.R
+│   │   └── process_testfishing_data_corrected.R
+│   ├── pipelines/                        # Pipeline orchestration
+│   │   └── bronze_to_silver_didson_pipeline.R
+│   ├── utils/                            # Utility functions
+│   │   ├── email_notifications.R
+│   │   └── error_handling.R
+│   ├── parse_excel_to_csv.R             # Excel to CSV conversion utility
+│   └── main.R                           # Main orchestration script
+├── data/                                # Data storage (replaces Azure Data Lake)
+│   ├── bronze/                          # Raw data layer
+│   ├── csv_parsed/                      # Parsed CSV files (version controlled)
+│   │   ├── lookup_data/                 # Lookup tables as CSV
+│   │   └── main_data/                   # Main data files as CSV
+│   └── silver/                          # Processed data layer
+│       ├── processed_from_csv/          # Latest processed data
+│       └── lookups_from_csv/            # Processed lookup tables
+├── prototype_data/                      # Original Excel files
+│   ├── lookup/                          # Lookup Excel files
+│   ├── Qualark_2023_DIDSON_Counts.xlsx
+│   └── Qualark_2023_Test_Fishing_and_Sampling.xlsx
+├── sql/                                 # Database schema files
+│   ├── qualarkspeciescomp_proto_schema.sql
+│   └── insert_lookup_info.sql
+├── docs/                                # Documentation
+├── qualark-demo.Rproj                   # R project file
+├── requirements.txt                     # R package requirements
+├── README.md                            # This file
+├── SETUP_GUIDE.md                       # Setup instructions
+└── DATA_STRUCTURE_ANALYSIS.md           # Data structure documentation
+```
 
-------------------------------------------------------------------------
+## Features
 
-## 1. Purpose
+### ✅ **Current Capabilities**
+- **Excel File Processing**: Automatically parses Excel files to CSV for version control
+- **Data Validation**: Input format validation and data quality checks
+- **Modular Processing**: Independent data flows for DIDSON and Test Fishing data
+- **Lookup Integration**: Automatic lookup table processing and joining
+- **Error Handling**: Comprehensive error logging and recovery
+- **Local Development**: Works without database or email dependencies
 
-To recreate the Qualark Species Composition Database that, Pacific Salmon Commission (PSC) Staff are prototyping in the PSC's Azure environment, in the DFO cloud environment to fulfill a clear operational need using transparent, automated, and interoperable processes. The database aims to consolidate counts, recorded sonar lengths, test fishing catch and biological data, and the results of the Qualark species composition model into a single, accessible platform. This product will serve as a flagship case study, demonstrating end-to-end stewardship from data ingestion through public dissemination and support Fraser Interior Area Staff.
+### 🔄 **Data Flow**
+1. **Excel Files** → **CSV Parsing** → **Data Validation** → **Processing** → **Silver Layer**
+2. **Lookup Tables** → **CSV Parsing** → **Integration** → **Data Joining**
+3. **Quality Validation** → **Error Reporting** → **Summary Generation**
 
-## 2. Problem Statement
+## Quick Start
 
--   Data scattered in multiple Excel files & text exports (DIDSON/ARIS).
+### Prerequisites
+- R 4.0+ with required packages (see `requirements.txt`)
+- Excel files in `prototype_data/` directory
 
--   Manual data entry → prone to errors, delays.
+### Installation
+```r
+# Install required packages
+source("r/setup.R")
 
--   Limited QA/QC checks before data is used for analysis.
+# Or install manually
+install.packages(c("here", "logging", "dplyr", "readxl", "readr", "tidyr", "DBI", "odbc", "lubridate", "mailR", "httr", "jsonlite", "RMySQL", "RSQLite", "RPostgres"))
+```
 
--   Data not centralized → difficulty consolidating for in in-season or post-season analysis.
+### Basic Usage
 
-------------------------------------------------------------------------
+#### Run All Pipelines
+```r
+source("r/main.R")
+results <- run_all_pipelines()
+```
 
-## 3. Objectives
+#### Run Individual Pipelines
+```r
+# Test Fishing pipeline
+result <- run_pipeline("testfishing")
 
--   Streamline data processing and storage, improve data management efficiency, enhance data analysis capabilities in order to support species composition assessments.
--   **Development of a Centralized Database:** Create a centralized database for Qualark hydroacoustic and test fishing data, consolidating data from multiple sources into one unified repository.
--   **Integration with R:** Enable seamless integration with R for data querying, analysis, and visualization.
--   **Data Backup and Recovery Mechanisms:** Establish robust data backup procedures and recovery mechanisms to prevent data loss and ensure data availability.
--   **Data Management Workflow:** Define workflows where administrators manage data uploads, receive updates from crew members through Excel files. This maintains familiar processes, ensuring smooth collaboration and minimal disruptions.
--   **Potential for Future Integration:** Design the system to allow for future integration via APIs or with other databases.
--   Use this case to **formalize governance structures**—assigning roles and decision authority for data formatting, pipelines, and publication.
+# DIDSON pipeline
+result <- run_pipeline("didson")
 
-------------------------------------------------------------------------
+# Parse Excel files only
+result <- run_pipeline("parse")
 
-## 4. Deliverables
+# Validate input format
+result <- run_pipeline("validate")
+```
 
--   A working, documented ETL pipeline that implements QA/QC and serves the data in a SQL database
--   A published code repository (e.g., GitHub or Azure Repos)
--   Governance documentation: Data Owner, Trustee, Steward roles and escalation paths
--   Data output from the SQL database that can be shared with the Pacific Salmon Commission staff with daily updates.
+#### Command Line Usage
+```bash
+# Run all pipelines
+Rscript r/main.R
 
-------------------------------------------------------------------------
+# Run specific pipeline
+Rscript r/main.R testfishing
+Rscript r/main.R didson
+Rscript r/main.R parse
+Rscript r/main.R validate
+Rscript r/main.R data_quality
+Rscript r/main.R cleanup
+```
 
-## 5. Team Roles
+## Data Processing
 
-An important part of the long term success of a data product relates to the roles and responsibilities related to governance of the data product. The roles outline below reflect DFO's Data Stewardship Initiative. Data roles and responsibilities should be defined and assigned for all data assets within the Department to ensure that departmental data is managed as a strategic asset.
+### Test Fishing Data
+- **Input**: `prototype_data/Qualark_2023_Test_Fishing_and_Sampling.xlsx`
+- **Processing**: Detailed Catch sheet → Drifts + Fish Samples
+- **Output**: 
+  - `data/silver/processed_from_csv/drifts_processed_[timestamp].csv`
+  - `data/silver/processed_from_csv/fish_samples_processed_[timestamp].csv`
 
-+-------------------+----------------------------------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| Role              | Name                                                           | Responsibilities                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
-+===================+================================================================+======================================================================================================================================================================================================================================================================================================================================================================================================================================================================================+
-| Task Team Leads   | Brett Johnson, Eric Taylor, Catarina Wor (Brooke Davis)        | Oversees project delivery, coordinates cross organizational collaboration and support                                                                                                                                                                                                                                                                                                                                                                                                |
-+-------------------+----------------------------------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| Data Trustee      | Scott Decker or Kaitlynn Dionne                                | [Data Trustees](https://intranet.ent.dfo-mpo.ca/dfo/sites/dfo-mpo/files/en_-_dfo_data_trustee_persona_0.pdf "DFO Intranet") ensure the strategic management of assigned data assets as well as compliance with departmental and enterprise data-related strategies, regulations, policies, directives and standards. Chairs the Data Product Governance Team. Usually a section head or higher. Coordinates with Salmon Data Domain Governance Team and the Regional Data Committee. |
-+-------------------+----------------------------------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| Data Steward      | -   Kaitlynn Dionne (Lead DS)                                  | [Data Stewards](https://intranet.ent.dfo-mpo.ca/dfo/sites/dfo-mpo/files/en_-_dfo_data_steward_persona_0.pdf "DFO Intranet") maximize the quality and reusability of their assigned data asset by enforcing data management business rules. Owns the product lifecycle and ensures documentation.                                                                                                                                                                                     |
-|                   |                                                                |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-|                   |                                                                |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-|                   |                                                                |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-|                   | -   Zhipeng Wu (DFO DSU, Initial development and transfer)     |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-|                   |                                                                |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-|                   | -   Albury C (DFO DSU, Initial development and transfer)       |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-+-------------------+----------------------------------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| Data Custodians   | -   Brian Smith (DFO, Long term maintenance)                   | [Data Custodians](https://intranet.ent.dfo-mpo.ca/dfo/sites/dfo-mpo/files/en_-_dfo_data_custodian_persona_0.pdf "DFO Intranet") ensure the safe custody and integrity of hosted data, and safeguarding data repositories, including the design and implementation of technical solutions.                                                                                                                                                                                            |
-|                   |                                                                |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-|                   | -   Sai Chandra (Initial development and prototyping with PSC) |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-|                   |                                                                |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-|                   | -   Daniel Doutaz (To troubleshoot pipelines in the office)    |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-+-------------------+----------------------------------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| Data Contributors | -   Michael Gauthier                                           | [Data Contributors](https://intranet.ent.dfo-mpo.ca/dfo/sites/dfo-mpo/files/en_-_dfo_data_contributor_persona_0.pdf "DFO Intranet") ensure that the data they provide to the Department (including data sourced from third-parties) aligns with all technical and business policies, procedures and standards, including those defined by data stewards.                                                                                                                             |
-+-------------------+----------------------------------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
-| Data Consumers    | -   Paul Van Dam Bates (DFO Post Doc)                          | [Data Consumers](https://intranet.ent.dfo-mpo.ca/dfo/sites/dfo-mpo/files/en_-_dfo_data_consumer_personas.pdf "DFO Intranet") ensure that their usage of data supports departmental and government objectives and mandate, including communicating regularly with data stewards on their data needs.                                                                                                                                                                                  |
-|                   |                                                                |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-|                   | -   Kaitlynn Dionne                                            |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-|                   |                                                                |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-|                   | -   Pacific Salmon Commission Fraser River Panel               |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-+-------------------+----------------------------------------------------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+### DIDSON Data
+- **Input**: `prototype_data/Qualark_2023_DIDSON_Counts.xlsx`
+- **Processing**: Multiple sheets → Consolidated DIDSON data
+- **Output**: `data/silver/processed_from_csv/didson_processed_[timestamp].csv`
 
-------------------------------------------------------------------------
+### Lookup Tables
+- **Input**: `prototype_data/lookup/*.xlsx`
+- **Processing**: Excel → CSV → Integration
+- **Output**: `data/silver/lookups_from_csv/*.csv`
 
-## 7. Timeline (Proposed)
+## Configuration
 
-+----------------------------------------------------------------+--------------------------------------+-------------------------------------------------------------------------------+
-| Phase                                                          | Duration                             | Milestone                                                                     |
-+================================================================+======================================+===============================================================================+
-| Kickoff and Scoping                                            | 2 weeks (June 5th- June 15th)        | Charter signed off, roles confirmed.                                          |
-+----------------------------------------------------------------+--------------------------------------+-------------------------------------------------------------------------------+
-| DFO Infrastructure Setup                                       | 4 weeks (June 15th- July 15th)       | DFO SQL Database Provisioned.                                                 |
-+----------------------------------------------------------------+--------------------------------------+-------------------------------------------------------------------------------+
-| Replication of PSC Architecture in DFO Environment in Parallel | 8 weeks (July 15th - September 15th) | First reproducible version created                                            |
-+----------------------------------------------------------------+--------------------------------------+-------------------------------------------------------------------------------+
-| Governance, Maintenance and Standards Review                   | Concurrent. Now - August 1st         | Infrastructure, governance, sustainability plan and roles approved by Trustee |
-+----------------------------------------------------------------+--------------------------------------+-------------------------------------------------------------------------------+
-| User Testing and Refinement                                    | 4-6 Weeks (Sept 15th-Nov 15th)       | Final version ready for 2026 season                                           |
-+----------------------------------------------------------------+--------------------------------------+-------------------------------------------------------------------------------+
+### Database Configuration
+Edit `r/config/connections.R` to configure database connections:
 
-------------------------------------------------------------------------
+```r
+# PostgreSQL configuration (for production)
+db_config <- list(
+  driver = "PostgreSQL",
+  server = "localhost",
+  database = "qualark_db",
+  port = 5432,
+  username = "your_username",
+  password = Sys.getenv("DB_PASSWORD")
+)
+```
 
-## 8. Success Criteria
+### Email Configuration
+Configure email notifications in `r/config/connections.R`:
 
--   Output is reproducible end-to-end using only the shared codebase and cloud resources
--   Clear governance structure and sustainability plan established and documented
--   Data Sharing Agreement Set up with Pacific Salmon Commission staff and they are able to access outputs in near real time
+```r
+email_config <- list(
+  smtp_server = "smtp.gmail.com",
+  port = 587,
+  username = "your_email@gmail.com",
+  password = Sys.getenv("EMAIL_PASSWORD"),
+  from = "your_email@gmail.com",
+  to = c("recipient1@example.com", "recipient2@example.com")
+)
+```
 
-------------------------------------------------------------------------
+## Testing
 
-## 9. Dependencies
+### Step-by-Step Testing Guide
 
--   
+1. **Setup Environment**
+   ```r
+   source("r/setup.R")
+   ```
 
--   
+2. **Parse Excel Files**
+   ```r
+   source("r/main.R")
+   result <- run_pipeline("parse")
+   ```
 
-------------------------------------------------------------------------
+3. **Validate Input Format**
+   ```r
+   result <- run_pipeline("validate")
+   ```
 
-## 10. Risks & Mitigation
+4. **Run Test Fishing Pipeline**
+   ```r
+   result <- run_pipeline("testfishing")
+   ```
 
-+----------------------+--------------------------------------------------------+
-| Risk                 | Mitigation Strategy                                    |
-+======================+========================================================+
-| Staff bandwidth      | Scope narrowly and provide flexible contribution paths |
-+----------------------+--------------------------------------------------------+
-| Data access delays   | Formalize data sharing agreements early                |
-+----------------------+--------------------------------------------------------+
-| Cloud complexity     |                                                        |
-+----------------------+--------------------------------------------------------+
-| Governance ambiguity | Escalate unclear decisions to RDC or OCDS early        |
-+----------------------+--------------------------------------------------------+
+5. **Run DIDSON Pipeline**
+   ```r
+   result <- run_pipeline("didson")
+   ```
 
-------------------------------------------------------------------------
+6. **Validate Data Quality**
+   ```r
+   result <- run_pipeline("data_quality")
+   ```
 
-## 11. Contact
+7. **Run All Pipelines**
+   ```r
+   results <- run_all_pipelines()
+   ```
 
-For more information or to get involved, contact:\
-**[Task Team Lead Name]**, [[email\@example.com](mailto:email@example.com){.email}]\
-Or reach out to **Brett Johnson**, Data Stewardship Unit: [Brett.Johnson\@dfo-mpo.gc.ca](mailto:Brett.Johnson@dfo-mpo.gc.ca){.email}
+### Expected Outputs
+- CSV files in `data/csv_parsed/`
+- Processed data in `data/silver/processed_from_csv/`
+- Validation reports in `data/silver/validation/`
+- Summary reports in `data/silver/reports/`
+
+## Production Setup
+
+### PostgreSQL Database
+1. Install PostgreSQL on your system
+2. Create database: `qualark_db`
+3. Run schema: `sql/qualarkspeciescomp_proto_schema.sql`
+4. Update `r/config/connections.R` with database credentials
+
+### Email Notifications
+1. Configure SMTP settings in `r/config/connections.R`
+2. Set environment variables for credentials
+3. Test email functionality
+
+### GitHub Actions (Optional)
+1. Set up repository secrets for database and email credentials
+2. Enable GitHub Actions workflows
+3. Configure file monitoring and scheduled runs
+
+## Troubleshooting
+
+### Common Issues
+
+1. **Excel Parsing Errors**
+   - Check file paths in `prototype_data/`
+   - Verify Excel file format and structure
+   - Review parsing logs
+
+2. **Data Validation Failures**
+   - Check column names and data types
+   - Verify lookup table structure
+   - Review validation reports
+
+3. **Database Connection Issues**
+   - Verify database credentials
+   - Check network connectivity
+   - Review connection configuration
+
+### Logs and Reports
+- **Logs**: Check R console output and log files
+- **Validation**: `data/silver/validation/validation_results_*.json`
+- **Reports**: `data/silver/reports/pipeline_summary_*.json`
+
+## TODO Items
+
+### High Priority
+- [ ] Set up PostgreSQL database
+- [ ] Configure email notifications
+- [ ] Test database integration
+- [ ] Set up GitHub Actions workflows
+- [ ] Create production deployment guide
+
+### Medium Priority
+- [ ] Add more data validation rules
+- [ ] Implement data quality monitoring
+- [ ] Create automated testing suite
+- [ ] Add performance monitoring
+- [ ] Create data backup procedures
+
+### Low Priority
+- [ ] Add data visualization capabilities
+- [ ] Create web dashboard
+- [ ] Implement advanced error recovery
+- [ ] Add data archiving functionality
+- [ ] Create API endpoints
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Test thoroughly
+5. Submit a pull request
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Support
+
+For questions or issues:
+1. Check the troubleshooting section
+2. Review the logs and reports
+3. Create an issue in the repository
+4. Contact the development team
