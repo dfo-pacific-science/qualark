@@ -1,0 +1,34 @@
+{
+	"name": "pipeline1",
+	"properties": {
+		"activities": [
+			{
+				"name": "NotifyLogicApp_Failed",
+				"type": "WebActivity",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"method": "POST",
+					"url": {
+						"value": "https://prod-27.canadacentral.logic.azure.com:443/workflows/a2e353e8764b4cbbb7b07df8f3161c99/triggers/When_a_HTTP_request_is_received/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2FWhen_a_HTTP_request_is_received%2Frun&sv=1.0&sig=tVfjTd553nWAuxFmsNiUaCZuuSeWjuxYzEP4OaNrbmc",
+						"type": "Expression"
+					},
+					"body": {
+						"value": "{\n  \"PipelineStatus\": \"SuccessWithErrorFiles\",\n  \"PipelineRunId\": \"51302763-7f58-4f9e-aee9-6ebd2ad14c50\",\n  \"AzureFileLocation\": \"Prototype/Failure\",\n  \"SharePointFolder\": \"Failure\",\n  \"Extension\": \".csv\"\n}",
+						"type": "Expression"
+					}
+				}
+			}
+		],
+		"annotations": [],
+		"lastPublishTime": "2025-03-07T21:10:57Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

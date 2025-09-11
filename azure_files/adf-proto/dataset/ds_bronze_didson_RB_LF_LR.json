@@ -1,0 +1,69 @@
+{
+	"name": "ds_bronze_didson_RB_LF_LR",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_adls_stqualarkspeciescompcace",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"folderPath": {
+				"type": "string",
+				"defaultValue": "Prototype/Qualark DIDSON Counts/20250219-121622"
+			}
+		},
+		"folder": {
+			"name": "bronze"
+		},
+		"annotations": [],
+		"type": "Excel",
+		"typeProperties": {
+			"sheetName": "RB LF LR",
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": "Qualark_2023_DIDSON_Counts.xlsx",
+				"folderPath": {
+					"value": "@dataset().folderPath",
+					"type": "Expression"
+				},
+				"fileSystem": "bronze"
+			},
+			"range": "A4",
+			"firstRowAsHeader": true
+		},
+		"schema": [
+			{
+				"name": "Date",
+				"type": "date"
+			},
+			{
+				"name": "Count Hour",
+				"type": "short"
+			},
+			{
+				"name": "Duration",
+				"type": "short"
+			},
+			{
+				"name": "Up",
+				"type": "short"
+			},
+			{
+				"name": "Down",
+				"type": "short"
+			},
+			{
+				"name": "Net Up",
+				"type": "short"
+			},
+			{
+				"name": "Salmon/Hour",
+				"type": "double"
+			},
+			{
+				"name": "Comments",
+				"type": "String"
+			}
+		]
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

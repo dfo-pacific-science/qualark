@@ -1,0 +1,90 @@
+{
+	"name": "ds_lookup_dimdates_adls",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_adls_stqualarkspeciescompcace",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "lookup_adls"
+		},
+		"annotations": [],
+		"type": "Excel",
+		"typeProperties": {
+			"sheetName": "DimDates",
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": "DimDates.xlsx",
+				"fileSystem": "lookup"
+			},
+			"firstRowAsHeader": true
+		},
+		"schema": [
+			{
+				"name": "DateNum",
+				"type": "String"
+			},
+			{
+				"name": "Date",
+				"type": "String"
+			},
+			{
+				"name": "YearMonthNum",
+				"type": "String"
+			},
+			{
+				"name": "Calendar_Quarter",
+				"type": "String"
+			},
+			{
+				"name": "MonthNum",
+				"type": "String"
+			},
+			{
+				"name": "MonthName",
+				"type": "String"
+			},
+			{
+				"name": "MonthShortName",
+				"type": "String"
+			},
+			{
+				"name": "WeekNum",
+				"type": "String"
+			},
+			{
+				"name": "DayNumOfYear",
+				"type": "String"
+			},
+			{
+				"name": "DayNumOfMonth",
+				"type": "String"
+			},
+			{
+				"name": "DayNumOfWeek",
+				"type": "String"
+			},
+			{
+				"name": "DayName",
+				"type": "String"
+			},
+			{
+				"name": "DayShortName",
+				"type": "String"
+			},
+			{
+				"name": "Quarter",
+				"type": "String"
+			},
+			{
+				"name": "YearQuarterNum",
+				"type": "String"
+			},
+			{
+				"name": "DayNumOfQuarter",
+				"type": "String"
+			}
+		]
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

@@ -1,0 +1,24 @@
+{
+	"name": "ls_sqldb_qualarkspeciescomp_proto",
+	"type": "Microsoft.DataFactory/factories/linkedservices",
+	"properties": {
+		"annotations": [],
+		"type": "AzureSqlDatabase",
+		"typeProperties": {
+			"server": "sqlsrv-qualark-speciescomp-canadace.database.windows.net",
+			"database": "sqldb-qualarkspeciescomp-proto",
+			"encrypt": "mandatory",
+			"trustServerCertificate": false,
+			"authenticationType": "SQL",
+			"userName": "adfuser_qualark_proto",
+			"password": {
+				"type": "AzureKeyVaultSecret",
+				"store": {
+					"referenceName": "ls_qualarkspeciescomp_kv",
+					"type": "LinkedServiceReference"
+				},
+				"secretName": "sql-qualarkproto-adf-user-pass"
+			}
+		}
+	}
+}

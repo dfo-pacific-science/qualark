@@ -1,0 +1,34 @@
+{
+	"name": "ds_sql_proto_markedfishtypes",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_sqldb_qualarkspeciescomp_proto",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "sql"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "marked_fish_type_id",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "marked_fish_type_code",
+				"type": "varchar"
+			},
+			{
+				"name": "marked_fish_type",
+				"type": "varchar"
+			}
+		],
+		"typeProperties": {
+			"schema": "dbo",
+			"table": "marked_fish_types"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

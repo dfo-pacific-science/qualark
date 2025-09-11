@@ -1,0 +1,38 @@
+{
+	"name": "ds_lookup_lifehistorytypes_adls",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_adls_stqualarkspeciescompcace",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "lookup_adls"
+		},
+		"annotations": [],
+		"type": "Excel",
+		"typeProperties": {
+			"sheetName": "LifeHistoryTypes",
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": "LifeHistoryTypes.xlsx",
+				"fileSystem": "lookup"
+			},
+			"firstRowAsHeader": true
+		},
+		"schema": [
+			{
+				"name": "LifeHistoryTypeID",
+				"type": "String"
+			},
+			{
+				"name": "LHType",
+				"type": "String"
+			},
+			{
+				"name": "LHCode",
+				"type": "String"
+			}
+		]
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

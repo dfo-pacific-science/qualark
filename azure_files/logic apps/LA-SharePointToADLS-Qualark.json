@@ -1,0 +1,353 @@
+{
+    "definition": {
+        "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+        "contentVersion": "1.0.0.0",
+        "triggers": {
+            "When_a_file_is_created_or_modified_(properties_only)": {
+                "type": "ApiConnection",
+                "inputs": {
+                    "host": {
+                        "connection": {
+                            "name": "@parameters('$connections')['sharepointonline']['connectionId']"
+                        }
+                    },
+                    "method": "get",
+                    "path": "/datasets/@{encodeURIComponent(encodeURIComponent('https://psconline.sharepoint.com/sites/PSCBiologists'))}/tables/@{encodeURIComponent(encodeURIComponent('633e98f5-12e0-4319-9ea8-73524018501f'))}/onupdatedfileitems"
+                },
+                "recurrence": {
+                    "interval": 10,
+                    "frequency": "Second",
+                    "timeZone": "Pacific Standard Time"
+                },
+                "splitOn": "@triggerBody()?['value']"
+            }
+        },
+        "actions": {
+            "Condition_CheckSubdirectory": {
+                "type": "If",
+                "expression": {
+                    "or": [
+                        {
+                            "contains": [
+                                "@triggerBody()?['{Path}']",
+                                "Sonar Data"
+                            ]
+                        },
+                        {
+                            "contains": [
+                                "@triggerBody()?['{Path}']",
+                                "Test Fishing and Sampling"
+                            ]
+                        }
+                    ]
+                },
+                "actions": {
+                    "Switch": {
+                        "type": "Switch",
+                        "expression": "@triggerBody()?['{Name}']",
+                        "default": {
+                            "actions": {
+                                "Send_Error_Notification": {
+                                    "type": "ApiConnection",
+                                    "inputs": {
+                                        "host": {
+                                            "connection": {
+                                                "name": "@parameters('$connections')['office365']['connectionId']"
+                                            }
+                                        },
+                                        "method": "post",
+                                        "body": {
+                                            "To": "madduri@psc.org",
+                                            "Subject": "Action Required: Incorrect File Uploaded",
+                                            "Body": "<p class=\"editor-paragraph\">Dear Team,<br><br>It appears that the file \"@{triggerBody()?['{FilenameWithExtension}']}\" does not meet the required naming convention. Please ensure that the file follows the correct format (for example, “Qualark_2023_DIDSON_Counts.xlsx”) and re-upload the correct version.<br><br>Thank you for your prompt attention to this matter,</p><br>",
+                                            "Importance": "Normal"
+                                        },
+                                        "path": "/v2/Mail"
+                                    }
+                                }
+                            }
+                        },
+                        "cases": {
+                            "Qualark_2023_DIDSON_Counts": {
+                                "actions": {
+                                    "Get_file_content_-_Didson_Counts": {
+                                        "type": "ApiConnection",
+                                        "inputs": {
+                                            "host": {
+                                                "connection": {
+                                                    "name": "@parameters('$connections')['sharepointonline']['connectionId']"
+                                                }
+                                            },
+                                            "method": "get",
+                                            "path": "/datasets/@{encodeURIComponent(encodeURIComponent('https://psconline.sharepoint.com/sites/PSCBiologists'))}/files/@{encodeURIComponent('/Data Pipeline Prototype/Sonar Data/Qualark_2023_DIDSON_Counts.xlsx')}/content",
+                                            "queries": {
+                                                "inferContentType": true
+                                            }
+                                        },
+                                        "metadata": {
+                                            "%252fData%2bPipeline%2bPrototype%252fSonor%2bData%252fQualark%2b2023%2bDIDSON%2bCounts.xlsx": "/Data Pipeline Prototype/Sonor Data/Qualark 2023 DIDSON Counts.xlsx",
+                                            "%252fData%2bPipeline%2bPrototype%252fSonor%2bData%252fQualark_2023_DIDSON_Counts.xlsx": "/Data Pipeline Prototype/Sonor Data/Qualark_2023_DIDSON_Counts.xlsx"
+                                        }
+                                    },
+                                    "Create_blob_(V2)_-_DIDSON_Counts": {
+                                        "type": "ApiConnection",
+                                        "inputs": {
+                                            "host": {
+                                                "connection": {
+                                                    "name": "@parameters('$connections')['azureblob-1']['connectionId']"
+                                                }
+                                            },
+                                            "method": "post",
+                                            "body": "@body('Get_file_content_-_Didson_Counts')",
+                                            "headers": {
+                                                "ReadFileMetadataFromServer": true
+                                            },
+                                            "path": "/v2/datasets/@{encodeURIComponent(encodeURIComponent('stqualarkspeciescompcace'))}/files",
+                                            "queries": {
+                                                "folderPath": "/bronze/Prototype/Qualark DIDSON Counts/@{variables('currentTime')}",
+                                                "name": "@triggerBody()?['{FilenameWithExtension}']",
+                                                "queryParametersSingleEncoded": true
+                                            }
+                                        },
+                                        "runAfter": {
+                                            "Get_file_content_-_Didson_Counts": [
+                                                "Succeeded"
+                                            ]
+                                        },
+                                        "runtimeConfiguration": {
+                                            "contentTransfer": {
+                                                "transferMode": "Chunked"
+                                            }
+                                        }
+                                    },
+                                    "Create_a_pipeline_run_-_DIDSON_Counts": {
+                                        "type": "ApiConnection",
+                                        "inputs": {
+                                            "host": {
+                                                "connection": {
+                                                    "name": "@parameters('$connections')['azuredatafactory']['connectionId']"
+                                                }
+                                            },
+                                            "method": "post",
+                                            "body": {
+                                                "inputFolderPath": "Prototype/Qualark DIDSON Counts/@{variables('currentTime')}"
+                                            },
+                                            "path": "/subscriptions/@{encodeURIComponent('87a65fa3-0b89-465a-b40c-394135300190')}/resourcegroups/@{encodeURIComponent('SpeciesCompDFO')}/providers/Microsoft.DataFactory/factories/@{encodeURIComponent('adf-qualarkspeciescomp-canadace')}/pipelines/@{encodeURIComponent('pipe_bronze_to_silver_didson_all_sheets')}/CreateRun",
+                                            "queries": {
+                                                "x-ms-api-version": "2017-09-01-preview"
+                                            }
+                                        },
+                                        "runAfter": {
+                                            "Create_blob_(V2)_-_DIDSON_Counts": [
+                                                "Succeeded"
+                                            ]
+                                        }
+                                    },
+                                    "Send_Email_Notification_-_Didson_Counts": {
+                                        "type": "ApiConnection",
+                                        "inputs": {
+                                            "host": {
+                                                "connection": {
+                                                    "name": "@parameters('$connections')['office365']['connectionId']"
+                                                }
+                                            },
+                                            "method": "post",
+                                            "body": {
+                                                "To": "madduri@psc.org",
+                                                "Subject": "File Loaded and Pipeline Initiated - runID: @{body('Create_a_pipeline_run_-_DIDSON_Counts')?['runId']}",
+                                                "Body": "<p class=\"editor-paragraph\">Dear Team,<br><br>This is to notify you that the file “@{body('Create_blob_(V2)_-_DIDSON_Counts')?['Name']}” has been successfully loaded, and the corresponding data pipeline has been initiated, the reference run ID is: @{body('Create_a_pipeline_run_-_DIDSON_Counts')?['runId']}<br><br>Thank you,</p><br>",
+                                                "Importance": "Normal"
+                                            },
+                                            "path": "/v2/Mail"
+                                        },
+                                        "runAfter": {
+                                            "Create_a_pipeline_run_-_DIDSON_Counts": [
+                                                "Succeeded"
+                                            ]
+                                        }
+                                    }
+                                },
+                                "case": "Qualark_2023_DIDSON_Counts"
+                            },
+                            "Qualark_2023_Test_Fishing_and_Sampling": {
+                                "actions": {
+                                    "Get_file_content_-_Qualark_Test_Fishing_and_Sampling": {
+                                        "type": "ApiConnection",
+                                        "inputs": {
+                                            "host": {
+                                                "connection": {
+                                                    "name": "@parameters('$connections')['sharepointonline']['connectionId']"
+                                                }
+                                            },
+                                            "method": "get",
+                                            "path": "/datasets/@{encodeURIComponent(encodeURIComponent('https://psconline.sharepoint.com/sites/PSCBiologists'))}/files/@{encodeURIComponent('%252fData%2bPipeline%2bPrototype%252fTest%2bFishing%2band%2bSampling%252fQualark_2023_Test_Fishing_and_Sampling.xlsx')}/content",
+                                            "queries": {
+                                                "inferContentType": true
+                                            }
+                                        },
+                                        "metadata": {
+                                            "%252fData%2bPipeline%2bPrototype%252fSonor%2bData%252fQualark%2b2023%2bDIDSON%2bCounts.xlsx": "/Data Pipeline Prototype/Sonor Data/Qualark 2023 DIDSON Counts.xlsx",
+                                            "%252fData%2bPipeline%2bPrototype%252fTest%2bFishing%2band%2bSampling%252fQualark%2b2023%2bTest%2bFishing%2band%2bSampling.xlsx": "/Data Pipeline Prototype/Test Fishing and Sampling/Qualark 2023 Test Fishing and Sampling.xlsx",
+                                            "%252fData%2bPipeline%2bPrototype%252fTest%2bFishing%2band%2bSampling%252fQualark_2023_Test_Fishing_and_Sampling.xlsx": "/Data Pipeline Prototype/Test Fishing and Sampling/Qualark_2023_Test_Fishing_and_Sampling.xlsx"
+                                        }
+                                    },
+                                    "Create_blob_(V2)_-_Test_Fishing_and_Sampling": {
+                                        "type": "ApiConnection",
+                                        "inputs": {
+                                            "host": {
+                                                "connection": {
+                                                    "name": "@parameters('$connections')['azureblob-1']['connectionId']"
+                                                }
+                                            },
+                                            "method": "post",
+                                            "body": "@body('Get_file_content_-_Qualark_Test_Fishing_and_Sampling')",
+                                            "headers": {
+                                                "ReadFileMetadataFromServer": true
+                                            },
+                                            "path": "/v2/datasets/@{encodeURIComponent(encodeURIComponent('stqualarkspeciescompcace'))}/files",
+                                            "queries": {
+                                                "folderPath": "/bronze/Prototype/Qualark Test Fishing and Sampling/@{variables('currentTime')}",
+                                                "name": "@triggerBody()?['{FilenameWithExtension}']",
+                                                "queryParametersSingleEncoded": true
+                                            }
+                                        },
+                                        "runAfter": {
+                                            "Get_file_content_-_Qualark_Test_Fishing_and_Sampling": [
+                                                "Succeeded"
+                                            ]
+                                        },
+                                        "runtimeConfiguration": {
+                                            "contentTransfer": {
+                                                "transferMode": "Chunked"
+                                            }
+                                        }
+                                    },
+                                    "Create_a_pipeline_run_-_Test_Fishing_and_Sampling": {
+                                        "type": "ApiConnection",
+                                        "inputs": {
+                                            "host": {
+                                                "connection": {
+                                                    "name": "@parameters('$connections')['azuredatafactory']['connectionId']"
+                                                }
+                                            },
+                                            "method": "post",
+                                            "body": {
+                                                "inputFolderPath": "Prototype/Qualark Test Fishing and Sampling/@{variables('currentTime')}"
+                                            },
+                                            "path": "/subscriptions/@{encodeURIComponent('87a65fa3-0b89-465a-b40c-394135300190')}/resourcegroups/@{encodeURIComponent('SpeciesCompDFO')}/providers/Microsoft.DataFactory/factories/@{encodeURIComponent('adf-qualarkspeciescomp-canadace')}/pipelines/@{encodeURIComponent('pipe_bronze_to_silver_testfishing_and_sampling')}/CreateRun",
+                                            "queries": {
+                                                "x-ms-api-version": "2017-09-01-preview"
+                                            }
+                                        },
+                                        "runAfter": {
+                                            "Create_blob_(V2)_-_Test_Fishing_and_Sampling": [
+                                                "Succeeded"
+                                            ]
+                                        }
+                                    },
+                                    "Send_Email_Notification_-_Test_Fishing_and_Sampling": {
+                                        "type": "ApiConnection",
+                                        "inputs": {
+                                            "host": {
+                                                "connection": {
+                                                    "name": "@parameters('$connections')['office365']['connectionId']"
+                                                }
+                                            },
+                                            "method": "post",
+                                            "body": {
+                                                "To": "madduri@psc.org",
+                                                "Subject": "File Loaded and Pipeline Initiated - runID: @{body('Create_a_pipeline_run_-_Test_Fishing_and_Sampling')?['runId']}",
+                                                "Body": "<p class=\"editor-paragraph\">Dear Team,<br><br>This is to notify you that the file “@{body('Create_blob_(V2)_-_Test_Fishing_and_Sampling')?['Name']}” has been successfully loaded, and the corresponding data pipeline has been initiated, the reference run ID is: @{body('Create_a_pipeline_run_-_Test_Fishing_and_Sampling')?['runId']}<br><br>Thank you,</p><br>",
+                                                "Importance": "Normal"
+                                            },
+                                            "path": "/v2/Mail"
+                                        },
+                                        "runAfter": {
+                                            "Create_a_pipeline_run_-_Test_Fishing_and_Sampling": [
+                                                "Succeeded"
+                                            ]
+                                        }
+                                    }
+                                },
+                                "case": "Qualark_2023_Test_Fishing_and_Sampling"
+                            }
+                        }
+                    }
+                },
+                "else": {
+                    "actions": {}
+                },
+                "runAfter": {
+                    "Get_current_time": [
+                        "Succeeded"
+                    ]
+                }
+            },
+            "Get_current_time": {
+                "type": "InitializeVariable",
+                "inputs": {
+                    "variables": [
+                        {
+                            "name": "currentTime",
+                            "type": "string",
+                            "value": "@convertFromUtc(utcNow(),'Pacific Standard Time', 'yyyyMMdd-HHmmss')"
+                        }
+                    ]
+                },
+                "runAfter": {}
+            }
+        },
+        "outputs": {},
+        "parameters": {
+            "envName": {
+                "defaultValue": "dev",
+                "type": "String"
+            },
+            "timestampFormat": {
+                "defaultValue": "yyyyMMdd-HHmmss",
+                "type": "String"
+            },
+            "$connections": {
+                "type": "Object",
+                "defaultValue": {}
+            }
+        }
+    },
+    "parameters": {
+        "$connections": {
+            "type": "Object",
+            "value": {
+                "sharepointonline": {
+                    "id": "/subscriptions/87a65fa3-0b89-465a-b40c-394135300190/providers/Microsoft.Web/locations/canadacentral/managedApis/sharepointonline",
+                    "connectionId": "/subscriptions/87a65fa3-0b89-465a-b40c-394135300190/resourceGroups/SpeciesCompDFO/providers/Microsoft.Web/connections/sharepointonline",
+                    "connectionName": "sharepointonline"
+                },
+                "azureblob-1": {
+                    "id": "/subscriptions/87a65fa3-0b89-465a-b40c-394135300190/providers/Microsoft.Web/locations/canadacentral/managedApis/azureblob",
+                    "connectionId": "/subscriptions/87a65fa3-0b89-465a-b40c-394135300190/resourceGroups/SpeciesCompDFO/providers/Microsoft.Web/connections/azureblob-1",
+                    "connectionName": "azureblob-1",
+                    "connectionProperties": {
+                        "authentication": {
+                            "type": "ManagedServiceIdentity"
+                        }
+                    }
+                },
+                "azuredatafactory": {
+                    "id": "/subscriptions/87a65fa3-0b89-465a-b40c-394135300190/providers/Microsoft.Web/locations/canadacentral/managedApis/azuredatafactory",
+                    "connectionId": "/subscriptions/87a65fa3-0b89-465a-b40c-394135300190/resourceGroups/SpeciesCompDFO/providers/Microsoft.Web/connections/azuredatafactory",
+                    "connectionName": "azuredatafactory",
+                    "connectionProperties": {
+                        "authentication": {
+                            "type": "ManagedServiceIdentity"
+                        }
+                    }
+                },
+                "office365": {
+                    "id": "/subscriptions/87a65fa3-0b89-465a-b40c-394135300190/providers/Microsoft.Web/locations/canadacentral/managedApis/office365",
+                    "connectionId": "/subscriptions/87a65fa3-0b89-465a-b40c-394135300190/resourceGroups/speciescompdfo/providers/Microsoft.Web/connections/office365",
+                    "connectionName": "office365"
+                }
+            }
+        }
+    }
+}

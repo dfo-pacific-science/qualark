@@ -1,0 +1,229 @@
+# Qualark Data Processing Pipeline
+# Azure DevOps Pipeline for automated data processing
+
+trigger:
+  branches:
+    include:
+    - main
+    - develop
+  paths:
+    include:
+    - data/bronze/*
+    - prototype_data/*
+    - r/*
+
+pr:
+  branches:
+    include:
+    - main
+
+variables:
+  - group: qualark-pipeline-variables
+  - name: R_VERSION
+    value: '4.3.2'
+  - name: PIPELINE_NAME
+    value: 'Qualark Data Processing'
+
+stages:
+- stage: Validate
+  displayName: 'Validate Input Data'
+  jobs:
+  - job: ValidateData
+    displayName: 'Validate Data Files'
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+    - task: UsePythonVersion@0
+      inputs:
+        versionSpec: '3.9'
+        addToPath: true
+        architecture: 'x64'
+    
+    - script: |
+        # Install R
+        sudo apt-get update
+        sudo apt-get install -y r-base r-base-dev
+        
+        # Install required R packages
+        R -e "install.packages(c('here', 'logging', 'dplyr', 'readxl', 'readr', 'tidyr', 'DBI', 'RPostgres', 'lubridate', 'mailR', 'httr', 'jsonlite'), repos='https://cran.rstudio.com/')"
+      displayName: 'Install R and Dependencies'
+    
+    - script: |
+        # Set working directory
+        cd $(System.DefaultWorkingDirectory)
+        
+        # Run data validation
+        Rscript r/main.R validate
+      displayName: 'Validate Input Data'
+      continueOnError: false
+    
+    - task: PublishTestResults@2
+      condition: always()
+      inputs:
+        testResultsFormat: 'JUnit'
+        testResultsFiles: '**/test-results.xml'
+        mergeTestResults: true
+        failTaskOnFailedTests: true
+
+- stage: Process
+  displayName: 'Process Data'
+  dependsOn: Validate
+  condition: succeeded()
+  jobs:
+  - job: ProcessData
+    displayName: 'Process Data Files'
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+    - script: |
+        # Install R
+        sudo apt-get update
+        sudo apt-get install -y r-base r-base-dev
+        
+        # Install required R packages
+        R -e "install.packages(c('here', 'logging', 'dplyr', 'readxl', 'readr', 'tidyr', 'DBI', 'RPostgres', 'lubridate', 'mailR', 'httr', 'jsonlite'), repos='https://cran.rstudio.com/')"
+      displayName: 'Install R and Dependencies'
+    
+    - script: |
+        # Set working directory
+        cd $(System.DefaultWorkingDirectory)
+        
+        # Parse Excel files to CSV
+        Rscript r/main.R parse
+      displayName: 'Parse Excel Files'
+    
+    - script: |
+        # Process test fishing data
+        Rscript r/main.R testfishing
+      displayName: 'Process Test Fishing Data'
+    
+    - script: |
+        # Process DIDSON data
+        Rscript r/main.R didson
+      displayName: 'Process DIDSON Data'
+    
+    - script: |
+        # Run data quality validation
+        Rscript r/main.R data_quality
+      displayName: 'Validate Data Quality'
+    
+    - task: PublishBuildArtifacts@1
+      inputs:
+        pathToPublish: 'data/silver'
+        artifactName: 'processed-data'
+        publishLocation: 'Container'
+
+- stage: Database
+  displayName: 'Database Operations'
+  dependsOn: Process
+  condition: succeeded()
+  jobs:
+  - job: DatabaseOperations
+    displayName: 'Database Operations'
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+    - script: |
+        # Install R
+        sudo apt-get update
+        sudo apt-get install -y r-base r-base-dev
+        
+        # Install required R packages
+        R -e "install.packages(c('here', 'logging', 'dplyr', 'readxl', 'readr', 'tidyr', 'DBI', 'RPostgres', 'lubridate', 'mailR', 'httr', 'jsonlite'), repos='https://cran.rstudio.com/')"
+      displayName: 'Install R and Dependencies'
+    
+    - script: |
+        # Set working directory
+        cd $(System.DefaultWorkingDirectory)
+        
+        # Enable database operations
+        R -e "source('r/data_flows/sql_integration.R'); enable_database_operations()"
+      displayName: 'Enable Database Operations'
+    
+    - script: |
+        # Run database integration
+        R -e "source('r/main.R'); source('r/data_flows/sql_integration.R'); populate_lookup_tables()"
+      displayName: 'Populate Lookup Tables'
+    
+    - script: |
+        # Insert processed data to database
+        R -e "source('r/main.R'); source('r/data_flows/sql_integration.R'); source('r/data_flows/process_testfishing_data_corrected.R'); source('r/data_flows/process_didson_data_corrected.R')"
+      displayName: 'Insert Data to Database'
+      env:
+        DB_HOST: $(DB_HOST)
+        DB_PORT: $(DB_PORT)
+        DB_NAME: $(DB_NAME)
+        DB_USER: $(DB_USER)
+        DB_PASSWORD: $(DB_PASSWORD)
+
+- stage: Notify
+  displayName: 'Notifications'
+  dependsOn: 
+  - Process
+  - Database
+  condition: always()
+  jobs:
+  - job: SendNotifications
+    displayName: 'Send Notifications'
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+    - script: |
+        # Install R
+        sudo apt-get update
+        sudo apt-get install -y r-base r-base-dev
+        
+        # Install required R packages
+        R -e "install.packages(c('here', 'logging', 'dplyr', 'readxl', 'readr', 'tidyr', 'DBI', 'RPostgres', 'lubridate', 'mailR', 'httr', 'jsonlite'), repos='https://cran.rstudio.com/')"
+      displayName: 'Install R and Dependencies'
+    
+    - script: |
+        # Set working directory
+        cd $(System.DefaultWorkingDirectory)
+        
+        # Enable email operations
+        R -e "source('r/utils/email_notifications.R'); enable_email_operations()"
+      displayName: 'Enable Email Operations'
+    
+    - script: |
+        # Send pipeline completion notification
+        R -e "source('r/main.R'); source('r/utils/email_notifications.R'); results <- run_all_pipelines(); send_pipeline_report(results, run_id = '$(Build.BuildNumber)')"
+      displayName: 'Send Pipeline Report'
+      env:
+        EMAIL_SMTP_SERVER: $(EMAIL_SMTP_SERVER)
+        EMAIL_PORT: $(EMAIL_PORT)
+        EMAIL_USERNAME: $(EMAIL_USERNAME)
+        EMAIL_PASSWORD: $(EMAIL_PASSWORD)
+        EMAIL_FROM: $(EMAIL_FROM)
+        EMAIL_TO: $(EMAIL_TO)
+
+- stage: Backup
+  displayName: 'Backup Operations'
+  dependsOn: Database
+  condition: succeeded()
+  jobs:
+  - job: DatabaseBackup
+    displayName: 'Database Backup'
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+    - script: |
+        # Install PostgreSQL client
+        sudo apt-get update
+        sudo apt-get install -y postgresql-client
+        
+        # Create database backup
+        pg_dump -h $(DB_HOST) -p $(DB_PORT) -U $(DB_USER) -d $(DB_NAME) > qualark_backup_$(Build.BuildNumber).sql
+        
+        # Compress backup
+        gzip qualark_backup_$(Build.BuildNumber).sql
+      displayName: 'Create Database Backup'
+      env:
+        PGPASSWORD: $(DB_PASSWORD)
+    
+    - task: PublishBuildArtifacts@1
+      inputs:
+        pathToPublish: 'qualark_backup_$(Build.BuildNumber).sql.gz'
+        artifactName: 'database-backup'
+        publishLocation: 'Container'
+      displayName: 'Publish Database Backup'

@@ -1,0 +1,19 @@
+{
+	"name": "ls_adls_stqualarkspeciescompcace",
+	"type": "Microsoft.DataFactory/factories/linkedservices",
+	"properties": {
+		"annotations": [],
+		"type": "AzureBlobFS",
+		"typeProperties": {
+			"url": "https://stqualarkspeciescompcace.dfs.core.windows.net/",
+			"accountKey": {
+				"type": "AzureKeyVaultSecret",
+				"store": {
+					"referenceName": "ls_qualarkspeciescomp_kv",
+					"type": "LinkedServiceReference"
+				},
+				"secretName": "storage-qualarkspeciescompcace-key"
+			}
+		}
+	}
+}

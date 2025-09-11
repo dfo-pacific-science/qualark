@@ -1,0 +1,536 @@
+{
+    "definition": {
+        "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+        "contentVersion": "1.0.0.0",
+        "triggers": {
+            "When_a_HTTP_request_is_received": {
+                "type": "Request",
+                "kind": "Http",
+                "inputs": {
+                    "schema": {
+                        "type": "object",
+                        "properties": {
+                            "PipelineStatus": {
+                                "type": "string"
+                            },
+                            "AzureFileLocation": {
+                                "type": "string"
+                            },
+                            "SharePointFolder": {
+                                "type": "string"
+                            },
+                            "PipelineRunId": {
+                                "type": "string"
+                            },
+                            "Extension": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "actions": {
+            "Initialize_variable_-_AzureFileLocation": {
+                "type": "InitializeVariable",
+                "inputs": {
+                    "variables": [
+                        {
+                            "name": "varAzureFileLocation",
+                            "type": "string",
+                            "value": "@triggerBody()?['AzureFileLocation']"
+                        }
+                    ]
+                },
+                "runAfter": {}
+            },
+            "Initialize_variable_-_PipelineStatus": {
+                "type": "InitializeVariable",
+                "inputs": {
+                    "variables": [
+                        {
+                            "name": "varPipelineStatus",
+                            "type": "string",
+                            "value": "@triggerBody()?['PipelineStatus']"
+                        }
+                    ]
+                },
+                "runAfter": {
+                    "Initialize_variable_-_AzureFileLocation": [
+                        "Succeeded"
+                    ]
+                }
+            },
+            "Initialize_variable_-_SharePointFolder": {
+                "type": "InitializeVariable",
+                "inputs": {
+                    "variables": [
+                        {
+                            "name": "varSharePointFolder",
+                            "type": "string",
+                            "value": "@triggerBody()?['SharePointFolder']"
+                        }
+                    ]
+                },
+                "runAfter": {
+                    "Initialize_variable_-_PipelineStatus": [
+                        "Succeeded"
+                    ]
+                }
+            },
+            "Initialize_variable_-_PipelineRunId": {
+                "type": "InitializeVariable",
+                "inputs": {
+                    "variables": [
+                        {
+                            "name": "varPipelineRunId",
+                            "type": "string",
+                            "value": "@triggerBody()?['PipelineRunId']"
+                        }
+                    ]
+                },
+                "runAfter": {
+                    "Initialize_variable_-_SharePointFolder": [
+                        "Succeeded"
+                    ]
+                }
+            },
+            "Initialize_variable_-_Extension": {
+                "type": "InitializeVariable",
+                "inputs": {
+                    "variables": [
+                        {
+                            "name": "varExtension",
+                            "type": "string",
+                            "value": "@triggerBody()?['Extension']"
+                        }
+                    ]
+                },
+                "runAfter": {
+                    "Initialize_variable_-_PipelineRunId": [
+                        "Succeeded"
+                    ]
+                }
+            },
+            "Initialize_variable_-_HasErrorRows": {
+                "type": "InitializeVariable",
+                "inputs": {
+                    "variables": [
+                        {
+                            "name": "varHasErrorRows",
+                            "type": "boolean",
+                            "value": false
+                        }
+                    ]
+                },
+                "runAfter": {
+                    "Initialize_variable_-_Extension": [
+                        "Succeeded"
+                    ]
+                }
+            },
+            "Switch_on_PipelineStatus": {
+                "type": "Switch",
+                "expression": "@variables('varPipelineStatus')",
+                "default": {
+                    "actions": {}
+                },
+                "cases": {
+                    "Success": {
+                        "actions": {
+                            "Send_Success_Email": {
+                                "type": "ApiConnection",
+                                "inputs": {
+                                    "host": {
+                                        "connection": {
+                                            "name": "@parameters('$connections')['office365']['connectionId']"
+                                        }
+                                    },
+                                    "method": "post",
+                                    "body": {
+                                        "To": "madduri@psc.org",
+                                        "Subject": "Pipeline Processed Successfully",
+                                        "Body": "<p>Dear Team,<br><br>The pipeline completed successfully!<br>Pipeline run ID: @{variables('varPipelineRunId')}<br><br>No errors encountered.<br><br>Thank you,<br>Your Automated System</p>",
+                                        "Importance": "Normal"
+                                    },
+                                    "path": "/v2/Mail"
+                                }
+                            }
+                        },
+                        "case": "Success"
+                    },
+                    "Failed": {
+                        "actions": {
+                            "List_blobs-copy": {
+                                "type": "ApiConnection",
+                                "inputs": {
+                                    "host": {
+                                        "connection": {
+                                            "name": "@parameters('$connections')['azureblob']['connectionId']"
+                                        }
+                                    },
+                                    "method": "get",
+                                    "path": "/v2/datasets/@{encodeURIComponent(encodeURIComponent('stqualarkspeciescompcace'))}/foldersV2/@{encodeURIComponent(encodeURIComponent(concat('bronze/', variables('varAzureFileLocation'))))}",
+                                    "queries": {
+                                        "nextPageMarker": "",
+                                        "useFlatListing": false
+                                    }
+                                }
+                            },
+                            "Filter_array-copy": {
+                                "type": "Query",
+                                "inputs": {
+                                    "from": "@body('List_blobs-copy')?['value']",
+                                    "where": "@endsWith(item()?['Name'], concat(variables('varPipelineRunId'), variables('varExtension')))"
+                                },
+                                "runAfter": {
+                                    "List_blobs-copy": [
+                                        "Succeeded"
+                                    ]
+                                }
+                            },
+                            "Create_folder_if_not_found-copy": {
+                                "type": "ApiConnection",
+                                "inputs": {
+                                    "host": {
+                                        "connection": {
+                                            "name": "@parameters('$connections')['sharepointonline']['connectionId']"
+                                        }
+                                    },
+                                    "method": "post",
+                                    "body": {
+                                        "path": "@concat(variables('varSharePointFolder'), '/', variables('varPipelineRunId'))"
+                                    },
+                                    "path": "/datasets/@{encodeURIComponent(encodeURIComponent('https://psconline.sharepoint.com/sites/PSCBiologists'))}/tables/@{encodeURIComponent(encodeURIComponent('633e98f5-12e0-4319-9ea8-73524018501f'))}/createnewfolder"
+                                },
+                                "runAfter": {
+                                    "Filter_array-copy": [
+                                        "Succeeded"
+                                    ]
+                                }
+                            },
+                            "For_each": {
+                                "type": "Foreach",
+                                "foreach": "@body('Filter_array-copy')",
+                                "actions": {
+                                    "Get_blob_content_using_path_(V2)": {
+                                        "type": "ApiConnection",
+                                        "inputs": {
+                                            "host": {
+                                                "connection": {
+                                                    "name": "@parameters('$connections')['azureblob']['connectionId']"
+                                                }
+                                            },
+                                            "method": "get",
+                                            "path": "/v2/datasets/@{encodeURIComponent(encodeURIComponent('stqualarkspeciescompcace'))}/GetFileContentByPath",
+                                            "queries": {
+                                                "path": "@items('For_each')['Path']",
+                                                "inferContentType": true,
+                                                "queryParametersSingleEncoded": true
+                                            }
+                                        }
+                                    },
+                                    "Create_file": {
+                                        "type": "ApiConnection",
+                                        "inputs": {
+                                            "host": {
+                                                "connection": {
+                                                    "name": "@parameters('$connections')['sharepointonline']['connectionId']"
+                                                }
+                                            },
+                                            "method": "post",
+                                            "body": "@body('Get_blob_content_using_path_(V2)')",
+                                            "path": "/datasets/@{encodeURIComponent(encodeURIComponent('https://psconline.sharepoint.com/sites/PSCBiologists'))}/files",
+                                            "queries": {
+                                                "folderPath": "@concat(variables('varSharePointFolder'), '/', variables('varPipelineRunId'))",
+                                                "name": "@items('For_each')['DisplayName']",
+                                                "queryParametersSingleEncoded": true
+                                            }
+                                        },
+                                        "runAfter": {
+                                            "Get_blob_content_using_path_(V2)": [
+                                                "Succeeded"
+                                            ]
+                                        }
+                                    }
+                                },
+                                "runAfter": {
+                                    "Create_folder_if_not_found-copy": [
+                                        "Succeeded"
+                                    ]
+                                }
+                            },
+                            "Send_Failed_Email": {
+                                "type": "ApiConnection",
+                                "inputs": {
+                                    "host": {
+                                        "connection": {
+                                            "name": "@parameters('$connections')['office365']['connectionId']"
+                                        }
+                                    },
+                                    "method": "post",
+                                    "body": {
+                                        "To": "madduri@psc.org",
+                                        "Subject": "Pipeline Processing Failed",
+                                        "Body": "<p>Dear Team,<br><br>The pipeline has failed.<br>Pipeline run ID: @{variables('varPipelineRunId')}<br><br>Please check error logs or error files for diagnosis.<br><br>Thank you,<br>Your Automated System</p>",
+                                        "Importance": "Normal"
+                                    },
+                                    "path": "/v2/Mail"
+                                },
+                                "runAfter": {
+                                    "For_each": [
+                                        "Succeeded"
+                                    ]
+                                }
+                            }
+                        },
+                        "case": "Failed"
+                    },
+                    "SuccessWithErrorFiles": {
+                        "actions": {
+                            "List_blobs": {
+                                "type": "ApiConnection",
+                                "inputs": {
+                                    "host": {
+                                        "connection": {
+                                            "name": "@parameters('$connections')['azureblob']['connectionId']"
+                                        }
+                                    },
+                                    "method": "get",
+                                    "path": "/v2/datasets/@{encodeURIComponent(encodeURIComponent('stqualarkspeciescompcace'))}/foldersV2/@{encodeURIComponent(encodeURIComponent(concat('bronze/', variables('varAzureFileLocation'))))}",
+                                    "queries": {
+                                        "nextPageMarker": "",
+                                        "useFlatListing": false
+                                    }
+                                }
+                            },
+                            "Filter_array": {
+                                "type": "Query",
+                                "inputs": {
+                                    "from": "@body('List_blobs')?['value']",
+                                    "where": "@endsWith(item()?['Name'], concat(variables('varPipelineRunId'), variables('varExtension')))"
+                                },
+                                "runAfter": {
+                                    "List_blobs": [
+                                        "Succeeded"
+                                    ]
+                                }
+                            },
+                            "Create_folder_if_not_found": {
+                                "type": "ApiConnection",
+                                "inputs": {
+                                    "host": {
+                                        "connection": {
+                                            "name": "@parameters('$connections')['sharepointonline']['connectionId']"
+                                        }
+                                    },
+                                    "method": "post",
+                                    "body": {
+                                        "path": "@concat(variables('varSharePointFolder'), '/', variables('varPipelineRunId'))"
+                                    },
+                                    "path": "/datasets/@{encodeURIComponent(encodeURIComponent('https://psconline.sharepoint.com/sites/PSCBiologists'))}/tables/@{encodeURIComponent(encodeURIComponent('633e98f5-12e0-4319-9ea8-73524018501f'))}/createnewfolder"
+                                },
+                                "runAfter": {
+                                    "Filter_array": [
+                                        "Succeeded"
+                                    ]
+                                }
+                            },
+                            "Reset_varHasErrorRows": {
+                                "type": "SetVariable",
+                                "inputs": {
+                                    "name": "varHasErrorRows",
+                                    "value": false
+                                },
+                                "runAfter": {
+                                    "Create_folder_if_not_found": [
+                                        "Succeeded"
+                                    ]
+                                }
+                            },
+                            "For_each_error_files": {
+                                "type": "Foreach",
+                                "foreach": "@body('Filter_array')",
+                                "actions": {
+                                    "Get_blob_content": {
+                                        "type": "ApiConnection",
+                                        "inputs": {
+                                            "host": {
+                                                "connection": {
+                                                    "name": "@parameters('$connections')['azureblob']['connectionId']"
+                                                }
+                                            },
+                                            "method": "get",
+                                            "path": "/v2/datasets/@{encodeURIComponent(encodeURIComponent('stqualarkspeciescompcace'))}/files/@{encodeURIComponent(encodeURIComponent(item()?['Path']))}/content",
+                                            "queries": {
+                                                "inferContentType": true
+                                            }
+                                        }
+                                    },
+                                    "Condition": {
+                                        "type": "If",
+                                        "expression": {
+                                            "and": [
+                                                {
+                                                    "greater": [
+                                                        "@length(split(trim(body('Get_blob_content')), '\n'))",
+                                                        1
+                                                    ]
+                                                }
+                                            ]
+                                        },
+                                        "actions": {
+                                            "Set_variable": {
+                                                "type": "SetVariable",
+                                                "inputs": {
+                                                    "name": "varHasErrorRows",
+                                                    "value": true
+                                                }
+                                            },
+                                            "Create_file_in_SharePoint": {
+                                                "type": "ApiConnection",
+                                                "inputs": {
+                                                    "host": {
+                                                        "connection": {
+                                                            "name": "@parameters('$connections')['sharepointonline']['connectionId']"
+                                                        }
+                                                    },
+                                                    "method": "post",
+                                                    "body": "@body('Get_blob_content')",
+                                                    "path": "/datasets/@{encodeURIComponent(encodeURIComponent('https://psconline.sharepoint.com/sites/PSCBiologists'))}/files",
+                                                    "queries": {
+                                                        "folderPath": "@body('Create_folder_if_not_found')?['{FullPath}']",
+                                                        "name": "@item()?['DisplayName']",
+                                                        "queryParametersSingleEncoded": true
+                                                    }
+                                                },
+                                                "runAfter": {
+                                                    "Set_variable": [
+                                                        "Succeeded"
+                                                    ]
+                                                }
+                                            }
+                                        },
+                                        "else": {
+                                            "actions": {}
+                                        },
+                                        "runAfter": {
+                                            "Get_blob_content": [
+                                                "Succeeded"
+                                            ]
+                                        }
+                                    }
+                                },
+                                "runAfter": {
+                                    "Reset_varHasErrorRows": [
+                                        "Succeeded"
+                                    ]
+                                }
+                            },
+                            "Condition_1": {
+                                "type": "If",
+                                "expression": {
+                                    "and": [
+                                        {
+                                            "equals": [
+                                                "@variables('varHasErrorRows')",
+                                                "@true"
+                                            ]
+                                        }
+                                    ]
+                                },
+                                "actions": {
+                                    "Send_Error_Files_Email-copy": {
+                                        "type": "ApiConnection",
+                                        "inputs": {
+                                            "host": {
+                                                "connection": {
+                                                    "name": "@parameters('$connections')['office365']['connectionId']"
+                                                }
+                                            },
+                                            "method": "post",
+                                            "body": {
+                                                "To": "madduri@psc.org",
+                                                "Subject": "Pipeline Processed with Errors - @{variables('varPipelineRunId')}",
+                                                "Body": "<p>Dear Team,<br><br>The pipeline completed with errors.<br>Pipeline run ID: @{variables('varPipelineRunId')}<br><br>Error files have been copied to SharePoint.<br><br>Please review these files.<br><br>Thank you,<br>Your Automated System</p>",
+                                                "Importance": "Normal"
+                                            },
+                                            "path": "/v2/Mail"
+                                        }
+                                    }
+                                },
+                                "else": {
+                                    "actions": {
+                                        "Send_Success_Email-copy": {
+                                            "type": "ApiConnection",
+                                            "inputs": {
+                                                "host": {
+                                                    "connection": {
+                                                        "name": "@parameters('$connections')['office365']['connectionId']"
+                                                    }
+                                                },
+                                                "method": "post",
+                                                "body": {
+                                                    "To": "madduri@psc.org",
+                                                    "Subject": "Pipeline Processed Successfully",
+                                                    "Body": "<p>Dear Team,<br><br>The pipeline completed successfully!<br>Pipeline run ID: @{variables('varPipelineRunId')}<br><br>No errors encountered.<br><br>Thank you,<br>Your Automated System</p>",
+                                                    "Importance": "Normal"
+                                                },
+                                                "path": "/v2/Mail"
+                                            }
+                                        }
+                                    }
+                                },
+                                "runAfter": {
+                                    "For_each_error_files": [
+                                        "Succeeded"
+                                    ]
+                                }
+                            }
+                        },
+                        "case": "SuccessWithErrorFiles"
+                    }
+                },
+                "runAfter": {
+                    "Initialize_variable_-_HasErrorRows": [
+                        "Succeeded"
+                    ]
+                }
+            }
+        },
+        "outputs": {},
+        "parameters": {
+            "$connections": {
+                "type": "Object",
+                "defaultValue": {}
+            }
+        }
+    },
+    "parameters": {
+        "$connections": {
+            "type": "Object",
+            "value": {
+                "office365": {
+                    "id": "/subscriptions/87a65fa3-0b89-465a-b40c-394135300190/providers/Microsoft.Web/locations/canadacentral/managedApis/office365",
+                    "connectionId": "/subscriptions/87a65fa3-0b89-465a-b40c-394135300190/resourceGroups/speciescompdfo/providers/Microsoft.Web/connections/office365",
+                    "connectionName": "office365"
+                },
+                "azureblob": {
+                    "id": "/subscriptions/87a65fa3-0b89-465a-b40c-394135300190/providers/Microsoft.Web/locations/canadacentral/managedApis/azureblob",
+                    "connectionId": "/subscriptions/87a65fa3-0b89-465a-b40c-394135300190/resourceGroups/SpeciesCompDFO/providers/Microsoft.Web/connections/azureblob-2",
+                    "connectionName": "azureblob-2",
+                    "connectionProperties": {
+                        "authentication": {
+                            "type": "ManagedServiceIdentity"
+                        }
+                    }
+                },
+                "sharepointonline": {
+                    "id": "/subscriptions/87a65fa3-0b89-465a-b40c-394135300190/providers/Microsoft.Web/locations/canadacentral/managedApis/sharepointonline",
+                    "connectionId": "/subscriptions/87a65fa3-0b89-465a-b40c-394135300190/resourceGroups/SpeciesCompDFO/providers/Microsoft.Web/connections/sharepointonline",
+                    "connectionName": "sharepointonline"
+                }
+            }
+        }
+    }
+}

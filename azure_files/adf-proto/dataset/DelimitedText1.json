@@ -1,0 +1,61 @@
+{
+	"name": "DelimitedText1",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_adls_stqualarkspeciescompcace",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"folderPath": "Prototype",
+				"fileSystem": "bronze"
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "\\",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": [
+			{
+				"name": "date",
+				"type": "String"
+			},
+			{
+				"name": "count_hour",
+				"type": "String"
+			},
+			{
+				"name": "duration_minutes",
+				"type": "String"
+			},
+			{
+				"name": "up",
+				"type": "String"
+			},
+			{
+				"name": "down",
+				"type": "String"
+			},
+			{
+				"name": "net_up",
+				"type": "String"
+			},
+			{
+				"name": "salmon_per_hour",
+				"type": "String"
+			},
+			{
+				"name": "comments",
+				"type": "String"
+			},
+			{
+				"name": "sonar_config_id",
+				"type": "String"
+			}
+		]
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

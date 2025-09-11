@@ -203,38 +203,13 @@ check_file_integrity <- function(file_path) {
   })
 }
 
-# Function to clean up old files
-cleanup_old_files <- function(directory, pattern, days_old = 7) {
-  
-  files <- list.files(directory, pattern = pattern, full.names = TRUE)
-  
-  if (length(files) == 0) {
-    return(0)
-  }
-  
-  file_info <- file.info(files)
-  cutoff_date <- Sys.time() - (days_old * 24 * 60 * 60)
-  
-  old_files <- files[file_info$mtime < cutoff_date]
-  
-  if (length(old_files) > 0) {
-    file.remove(old_files)
-    loginfo(paste("Cleaned up", length(old_files), "old files"))
-    return(length(old_files))
-  }
-  
-  return(0)
-}
-
-# Function to monitor system resources
+# Function to monitor system resources (simplified)
 monitor_system_resources <- function() {
   
   system_info <- list(
     timestamp = Sys.time(),
-    memory_usage = memory.size(),
-    memory_limit = memory.limit(),
-    cpu_usage = system("wmic cpu get loadpercentage /value", intern = TRUE),
-    disk_usage = system("wmic logicaldisk get size,freespace,caption", intern = TRUE)
+    memory_usage = gc()[2, 2],  # Use R's garbage collection instead of Windows-specific functions
+    platform = R.version$platform
   )
   
   return(system_info)

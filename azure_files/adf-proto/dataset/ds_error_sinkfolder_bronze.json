@@ -1,0 +1,33 @@
+{
+	"name": "ds_error_sinkfolder_bronze",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_adls_stqualarkspeciescompcace",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"runId": {
+				"type": "string",
+				"defaultValue": "\"\""
+			}
+		},
+		"folder": {
+			"name": "error"
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"folderPath": "Prototype/Failure",
+				"fileSystem": "bronze"
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "\\",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": []
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

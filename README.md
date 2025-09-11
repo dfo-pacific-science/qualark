@@ -1,25 +1,35 @@
 # Qualark Data Processing Pipeline
 
-This project converts Azure Data Factory (ADF) JSON scripts and Logic Apps to open-source R scripts and GitHub Actions workflows, enabling you to escape Azure dependencies while maintaining the same functionality.
+This project takes DIDSON Sonar files and test fishing species count data and processes them for storage and analysis.
+
+Data are collected in the field by Fraser Interior Area Stock Assessment Biologists. Those data are submitted to this data system through a secure upload page hosted on an R Shiny Server in a Linux Desktop (LxD) container. 1) When the files are uploaded, they should trigger a series of events including uploading raw data copies to SharePoint (done use Microsoft365 R package), 2) Parsing the excel files into seperate .csv files into a temp forlder on our LxD for version control purposes; 3) Data quality and validation checks; 4) Transformation to the database schema; 5) Upsert to the Postgres DB.
+
+Comprehensive testing and notifications For any errors that occur during the proces..
+
+This project converts functionality originally developed in Azure Data Factory (ADF) JSON scripts and Logic Apps to open-source R scripts and Azure DevOps pipelines, enabling us to escape Azure dependencies while maintaining the same functionality.
 
 ## Project Structure
 
 ```
-qualark-demo/
+qualark/
 ├── r/                                    # R scripts (replaces ADF)
 │   ├── config/
 │   │   └── connections.R                 # Database and storage connections
 │   ├── data_flows/                       # Data processing scripts
 │   │   ├── process_didson_data_corrected.R
-│   │   └── process_testfishing_data_corrected.R
+│   │   ├── process_testfishing_data_corrected.R
+│   │   ├── sql_integration.R             # Database operations
+│   │   └── sharepoint_integration.R     # SharePoint uploads
 │   ├── utils/                            # Utility functions
-│   │   ├── email_notifications.R
-│   │   └── error_handling.R
+│   │   ├── email_notifications.R        # Enhanced email system
+│   │   ├── error_handling.R             # Error management
+│   │   ├── pipeline_status.R            # Status tracking
+│   │   └── database_backup.R            # Backup procedures
 │   ├── parse_excel_to_csv.R             # Excel to CSV conversion utility
 │   ├── setup.R                          # Package installation and setup
 │   └── main.R                           # Main orchestration script
 ├── data/                                # Data storage (replaces Azure Data Lake)
-│   ├── bronze/                          # Raw data layer
+│   ├── bronze/                          # Raw data layers 
 │   │   └── Prototype/                   # Sample data files
 │   ├── csv_parsed/                      # Parsed CSV files (version controlled)
 │   │   ├── lookup_data/                 # Lookup tables as CSV
@@ -55,11 +65,17 @@ qualark-demo/
 - **Lookup Integration**: Automatic lookup table processing and joining
 - **Error Handling**: Comprehensive error logging and recovery
 - **Local Development**: Works without database or email dependencies
+- **Database Integration**: Complete PostgreSQL integration with flip switches
+- **SharePoint Integration**: Automatic upload of raw files for provenance
+- **Enhanced Notifications**: Comprehensive email notification system
+- **Pipeline Status Management**: Real-time status tracking and reporting
+- **Database Backup**: Automated backup and recovery procedures
+- **Azure DevOps Integration**: Complete CI/CD pipeline configuration
 
 ### 🔄 **Data Flow**
-1. **Excel Files** → **CSV Parsing** → **Data Validation** → **Processing** → **Silver Layer**
-2. **Lookup Tables** → **CSV Parsing** → **Integration** → **Data Joining**
-3. **Quality Validation** → **Error Reporting** → **Summary Generation**
+1. **Excel Files Uploaded through Web Page** → **CSV Parsing** → **SharePoint Uploa/Backup** → **Data Validation** → **Processing** → **Silver Layer**
+2. **Lookup Tables** → **CSV Parsing** → **Database Integration** → **Data Joining**
+3. **Quality Validation** → **Database Insertion** → **Backup Creation** → **Notification** → **Summary Generation**
 
 ## Quick Start
 
@@ -110,7 +126,6 @@ Rscript r/main.R didson
 Rscript r/main.R parse
 Rscript r/main.R validate
 Rscript r/main.R data_quality
-Rscript r/main.R cleanup
 ```
 
 ## Data Processing
@@ -133,6 +148,28 @@ Rscript r/main.R cleanup
 - **Output**: `data/silver/lookups_from_csv/*.csv`
 
 ## Configuration
+
+### Flip Switches for Production Readiness
+
+The pipeline includes flip switches to enable/disable production features:
+
+```r
+# Enable database operations (when ready)
+source("r/data_flows/sql_integration.R")
+enable_database_operations()
+
+# Enable email notifications (when ready)
+source("r/utils/email_notifications.R")
+enable_email_operations()
+
+# Enable SharePoint operations (when ready)
+source("r/data_flows/sharepoint_integration.R")
+enable_sharepoint_operations()
+
+# Enable backup operations (when ready)
+source("r/utils/database_backup.R")
+enable_backup_operations()
+```
 
 ### Database Configuration
 Edit `r/config/connections.R` to configure database connections:
@@ -160,6 +197,17 @@ email_config <- list(
   password = Sys.getenv("EMAIL_PASSWORD"),
   from = "your_email@gmail.com",
   to = c("recipient1@example.com", "recipient2@example.com")
+)
+```
+
+### SharePoint Configuration
+Configure SharePoint integration in `r/config/connections.R`:
+
+```r
+sharepoint_config <- list(
+  site_id = Sys.getenv("SHAREPOINT_SITE_ID"),
+  token = Sys.getenv("SHAREPOINT_TOKEN"),
+  base_url = "https://graph.microsoft.com/v1.0/sites"
 )
 ```
 
@@ -222,7 +270,14 @@ email_config <- list(
 2. Set environment variables for credentials
 3. Test email functionality
 
-### GitHub Actions (Optional)
+### Azure DevOps (Recommended)
+1. Set up Azure DevOps project and import repository
+2. Configure variable groups for database and email credentials
+3. Set up service connections for PostgreSQL and SMTP
+4. Configure pipeline triggers and schedules
+5. See `azure-devops/README.md` for detailed setup instructions
+
+### GitHub Actions (Alternative)
 1. Set up repository secrets for database and email credentials
 2. Enable GitHub Actions workflows
 3. Configure file monitoring and scheduled runs
@@ -261,17 +316,26 @@ email_config <- list(
 - [x] Comprehensive testing suite
 - [x] Documentation and guides
 - [x] Local development environment
+- [x] Complete SQL database integration with flip switches
+- [x] SharePoint integration for raw file storage
+- [x] Enhanced email notification system
+- [x] Pipeline status management and reporting
+- [x] Database backup and recovery procedures
+- [x] Azure DevOps pipeline configuration
+- [x] Production-ready flip switches
 
-### 🔄 **In Progress**
-- [ ] PostgreSQL database setup
-- [ ] Email notification configuration
-- [ ] Production deployment
+### 🔄 **Ready for Production**
+- [ ] Configure database credentials and enable database operations
+- [ ] Configure email credentials and enable email notifications
+- [ ] Configure SharePoint credentials and enable SharePoint operations
+- [ ] Set up Azure DevOps project and configure pipelines
+- [ ] Test complete production workflow
 
-### 📋 **Next Steps**
-- [ ] Database integration testing
-- [ ] GitHub Actions workflows
-- [ ] Performance optimization
+### 📋 **Future Enhancements**
 - [ ] Data visualization dashboard
+- [ ] Advanced analytics and reporting
+- [ ] API endpoints for data access
+- [ ] Mobile application for field data collection
 
 ## Contributing
 

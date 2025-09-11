@@ -1,0 +1,89 @@
+{
+	"name": "df_didson_bank_freq_to_silver",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "ds_bronze_didson_RB_HF",
+						"type": "DatasetReference"
+					},
+					"name": "source1"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "test_silver_load",
+						"type": "DatasetReference"
+					},
+					"name": "sink1"
+				}
+			],
+			"transformations": [
+				{
+					"name": "renamecolumns"
+				},
+				{
+					"name": "filter1"
+				}
+			],
+			"scriptLines": [
+				"parameters{",
+				"     p_run_id as string (\"\")",
+				"}",
+				"source(output(",
+				"          Date as date,",
+				"          {Count Hour} as short,",
+				"          Duration as short,",
+				"          Up as short,",
+				"          Down as short,",
+				"          {Net Up} as short,",
+				"          {Salmon/Hour} as double,",
+				"          Comments as string",
+				"     ),",
+				"     allowSchemaDrift: false,",
+				"     validateSchema: true,",
+				"     limit: 100,",
+				"     ignoreNoFilesFound: false) ~> source1",
+				"source1 select(mapColumn(",
+				"          date = Date,",
+				"          count_hour = {Count Hour},",
+				"          duration_minutes = Duration,",
+				"          up = Up,",
+				"          down = Down,",
+				"          net_up = {Net Up},",
+				"          salmon_per_hour = {Salmon/Hour},",
+				"          comments = Comments",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> renamecolumns",
+				"renamecolumns filter((\r",
+				"    !isNull(date) &&\r",
+				"    !isNull(toDate(toString(date), 'yyyy-MM-dd'))\r",
+				") &&\r",
+				"(\r",
+				"    !isNull(count_hour) &&\r",
+				"    toInteger(count_hour) >= 0 &&\r",
+				"    toInteger(count_hour) <= 23\r",
+				") &&\r",
+				"(\r",
+				"    !isNull(up) &&\r",
+				"    toInteger(up) >= 0\r",
+				") &&\r",
+				"(\r",
+				"    !isNull(down) &&\r",
+				"    toInteger(down) >= 0\r",
+				")) ~> filter1",
+				"filter1 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> sink1"
+			]
+		}
+	}
+}

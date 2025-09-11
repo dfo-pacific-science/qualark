@@ -1,0 +1,200 @@
+{
+	"name": "df_insert_drifts_silver_to_sql",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "ds_silver_detailedcatch_csv",
+						"type": "DatasetReference"
+					},
+					"name": "source1"
+				},
+				{
+					"dataset": {
+						"referenceName": "ds_lookup_locations_adls",
+						"type": "DatasetReference"
+					},
+					"name": "sourcelookuplocations"
+				},
+				{
+					"dataset": {
+						"referenceName": "ds_lookup_meshsizes_adls",
+						"type": "DatasetReference"
+					},
+					"name": "sourcelookupmeshsizes"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "ds_sql_proto_drifts",
+						"type": "DatasetReference"
+					},
+					"name": "sink1"
+				}
+			],
+			"transformations": [
+				{
+					"name": "filterinvaliddateanddrift"
+				},
+				{
+					"name": "lookuplocationid"
+				},
+				{
+					"name": "lookupmeshsizeid"
+				},
+				{
+					"name": "select1"
+				},
+				{
+					"name": "cast1"
+				},
+				{
+					"name": "AlterRow1"
+				},
+				{
+					"name": "derivedColumn1"
+				}
+			],
+			"scriptLines": [
+				"parameters{",
+				"     p_run_id as string (\"\")",
+				"}",
+				"source(output(",
+				"          drift_date as date,",
+				"          drift_number as short,",
+				"          location as string,",
+				"          drift_start_time as string,",
+				"          drift_end_time as string,",
+				"          duration as string,",
+				"          mesh_size as double,",
+				"          adult_sockeye_retained as short,",
+				"          jack_sockeye_retained as short,",
+				"          adult_chinook_retained_ad_p as short,",
+				"          adult_chinook_retained_ad_a as short,",
+				"          adult_chinook_retained_ad_unk as short,",
+				"          jack_chinook_retained_ad_p as short,",
+				"          jack_chinook_retained_ad_a as short,",
+				"          jack_chinook_retained_ad_unk as short,",
+				"          coho_retained_ad_p as short,",
+				"          coho_retained_ad_a as short,",
+				"          coho_retained_ad_unk as short,",
+				"          pink_retained as short,",
+				"          chum_retained as short,",
+				"          steelhead_retained as short,",
+				"          adult_sockeye_released as short,",
+				"          jack_sockeye_released as short,",
+				"          adult_chinook_released_ad_p as short,",
+				"          adult_chinook_released_ad_a as short,",
+				"          adult_chinook_released_ad_unk as short,",
+				"          jack_chinook_released_ad_p as short,",
+				"          jack_chinook_released_ad_a as short,",
+				"          jack_chinook_released_ad_unk as short,",
+				"          coho_released_ad_p as short,",
+				"          coho_released_ad_a as short,",
+				"          coho_released_ad_unk as short,",
+				"          pink_released as short,",
+				"          chum_released as short,",
+				"          steelhead_released as short,",
+				"          comments as string,",
+				"          total_adult_chinook_retained as short,",
+				"          total_jack_chinook_retained as short,",
+				"          total_adult_chinook_released as short,",
+				"          total_jack_chinook_released as short,",
+				"          total_coho_retained as short,",
+				"          total_coho_released as short",
+				"     ),",
+				"     allowSchemaDrift: false,",
+				"     validateSchema: true,",
+				"     ignoreNoFilesFound: false) ~> source1",
+				"source(output(",
+				"          LocationID as string,",
+				"          LocationName as string",
+				"     ),",
+				"     allowSchemaDrift: false,",
+				"     validateSchema: true,",
+				"     ignoreNoFilesFound: false) ~> sourcelookuplocations",
+				"source(output(",
+				"          MeshId as short,",
+				"          MeshSize as double",
+				"     ),",
+				"     allowSchemaDrift: false,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> sourcelookupmeshsizes",
+				"source1 filter(!isNull(drift_date)\r",
+				"&& drift_number > 0 \r",
+				"&& mesh_size >= 0\r",
+				"&& location != '' && !isNull(location) \r",
+				"&& minute(toTimestamp(duration, 'HH:mm:ss')) > 0\r",
+				"&& toTimestamp(drift_start_time, 'HH:mm:ss') < toTimestamp(drift_end_time, 'HH:mm:ss')) ~> filterinvaliddateanddrift",
+				"filterinvaliddateanddrift, sourcelookuplocations lookup(location == LocationName,",
+				"     multiple: false,",
+				"     pickup: 'any',",
+				"     broadcast: 'auto')~> lookuplocationid",
+				"lookuplocationid, sourcelookupmeshsizes lookup(mesh_size == MeshSize,",
+				"     multiple: false,",
+				"     pickup: 'any',",
+				"     broadcast: 'auto')~> lookupmeshsizeid",
+				"lookupmeshsizeid select(mapColumn(",
+				"          drift_date,",
+				"          drift_number,",
+				"          location_id = LocationID,",
+				"          drift_start_time,",
+				"          drift_end_time,",
+				"          drift_duration = duration,",
+				"          mesh_id = MeshId,",
+				"          comments",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> select1",
+				"select1 cast(output(",
+				"          drift_start_time as timestamp 'HH:mm:ss',",
+				"          drift_end_time as timestamp 'HH:mm:ss',",
+				"          drift_duration as timestamp 'HH:mm:ss'",
+				"     ),",
+				"     errors: true) ~> cast1",
+				"derivedColumn1 alterRow(upsertIf(true())) ~> AlterRow1",
+				"cast1 derive(added_by = \"adfuser_qualark_proto\") ~> derivedColumn1",
+				"AlterRow1 sink(allowSchemaDrift: false,",
+				"     validateSchema: true,",
+				"     input(",
+				"          drift_id as integer,",
+				"          drift_date as date,",
+				"          drift_number as integer,",
+				"          location_id as string,",
+				"          start_time as timestamp,",
+				"          end_time as timestamp,",
+				"          duration_minutes as timestamp,",
+				"          mesh_id as integer,",
+				"          comments as string,",
+				"          created_at as timestamp,",
+				"          updated_at as timestamp,",
+				"          updated_by as string",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:false,",
+				"     updateable:false,",
+				"     upsertable:true,",
+				"     keys:['drift_date','drift_number'],",
+				"     format: 'table',",
+				"     preSQLs:['DELETE FROM [dbo].[fish_samples];\\nDELETE FROM [dbo].[drifts];\\n\\nDBCC CHECKIDENT (\\'[dbo].[drifts]\\', RESEED, 0);\\nDBCC CHECKIDENT (\\'[dbo].[fish_samples]\\', RESEED, 0);'],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          drift_date,",
+				"          drift_number,",
+				"          location_id,",
+				"          start_time = drift_start_time,",
+				"          end_time = drift_end_time,",
+				"          duration_minutes = drift_duration,",
+				"          mesh_id,",
+				"          comments,",
+				"          updated_by = added_by",
+				"     )) ~> sink1"
+			]
+		}
+	}
+}

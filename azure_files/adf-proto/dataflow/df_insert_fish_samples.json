@@ -1,0 +1,324 @@
+{
+	"name": "df_insert_fish_samples",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "ds_silver_detailedcatch_csv",
+						"type": "DatasetReference"
+					},
+					"name": "sourcedetailedcatch"
+				},
+				{
+					"dataset": {
+						"referenceName": "ds_sql_proto_drifts",
+						"type": "DatasetReference"
+					},
+					"name": "sourcesqldrift"
+				},
+				{
+					"dataset": {
+						"referenceName": "ds_lookup_locations_adls",
+						"type": "DatasetReference"
+					},
+					"name": "sourcelookuplocation"
+				},
+				{
+					"dataset": {
+						"referenceName": "ds_lookup_meshsizes_adls",
+						"type": "DatasetReference"
+					},
+					"name": "sourcelookupmeshid"
+				},
+				{
+					"dataset": {
+						"referenceName": "ds_lookup_sepcies_adls",
+						"type": "DatasetReference"
+					},
+					"name": "sourcelookupspecies"
+				},
+				{
+					"dataset": {
+						"referenceName": "ds_lookup_lifehistorytypes_adls",
+						"type": "DatasetReference"
+					},
+					"name": "sourcelookylifehistory"
+				},
+				{
+					"dataset": {
+						"referenceName": "ds_lookup_markedfishtypes_adls",
+						"type": "DatasetReference"
+					},
+					"name": "sourcelookupmarkedfishtype"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "DelimitedText1",
+						"type": "DatasetReference"
+					},
+					"name": "sink1"
+				}
+			],
+			"transformations": [
+				{
+					"name": "filtervalidrows"
+				},
+				{
+					"name": "lookupdriftid"
+				},
+				{
+					"name": "lookuplocationid"
+				},
+				{
+					"name": "lookupmeshid"
+				},
+				{
+					"name": "unpivot1"
+				},
+				{
+					"name": "derivedColumn1"
+				},
+				{
+					"name": "select1"
+				},
+				{
+					"name": "derivedColumn2"
+				},
+				{
+					"name": "derivedColumn3"
+				},
+				{
+					"name": "lookup1"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          drift_date as date,",
+				"          drift_number as short,",
+				"          location as string,",
+				"          drift_start_time as string,",
+				"          drift_end_time as string,",
+				"          duration as string,",
+				"          mesh_size as double,",
+				"          adult_sockeye_retained as short,",
+				"          jack_sockeye_retained as short,",
+				"          adult_chinook_retained_ad_p as short,",
+				"          adult_chinook_retained_ad_a as short,",
+				"          adult_chinook_retained_ad_unk as short,",
+				"          jack_chinook_retained_ad_p as short,",
+				"          jack_chinook_retained_ad_a as short,",
+				"          jack_chinook_retained_ad_unk as short,",
+				"          coho_retained_ad_p as short,",
+				"          coho_retained_ad_a as short,",
+				"          coho_retained_ad_unk as short,",
+				"          pink_retained as short,",
+				"          chum_retained as short,",
+				"          steelhead_retained as short,",
+				"          adult_sockeye_released as short,",
+				"          jack_sockeye_released as short,",
+				"          adult_chinook_released_ad_p as short,",
+				"          adult_chinook_released_ad_a as short,",
+				"          adult_chinook_released_ad_unk as short,",
+				"          jack_chinook_released_ad_p as short,",
+				"          jack_chinook_released_ad_a as short,",
+				"          jack_chinook_released_ad_unk as short,",
+				"          coho_released_ad_p as short,",
+				"          coho_released_ad_a as short,",
+				"          coho_released_ad_unk as short,",
+				"          pink_released as short,",
+				"          chum_released as short,",
+				"          steelhead_released as short,",
+				"          comments as string,",
+				"          total_adult_chinook_retained as short,",
+				"          total_jack_chinook_retained as short,",
+				"          total_adult_chinook_released as short,",
+				"          total_jack_chinook_released as short,",
+				"          total_coho_retained as short,",
+				"          total_coho_released as short",
+				"     ),",
+				"     allowSchemaDrift: false,",
+				"     validateSchema: true,",
+				"     limit: 100,",
+				"     ignoreNoFilesFound: false) ~> sourcedetailedcatch",
+				"source(output(",
+				"          drift_id as integer,",
+				"          drift_date as date,",
+				"          drift_number as integer,",
+				"          location_id as string,",
+				"          start_time as timestamp,",
+				"          end_time as timestamp,",
+				"          duration_minutes as timestamp,",
+				"          mesh_id as integer,",
+				"          comments as string,",
+				"          created_at as timestamp,",
+				"          updated_at as timestamp,",
+				"          updated_by as string",
+				"     ),",
+				"     allowSchemaDrift: false,",
+				"     validateSchema: false,",
+				"     isolationLevel: 'READ_UNCOMMITTED',",
+				"     format: 'table') ~> sourcesqldrift",
+				"source(output(",
+				"          LocationID as string,",
+				"          LocationName as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> sourcelookuplocation",
+				"source(output(",
+				"          MeshId as short,",
+				"          MeshSize as double",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> sourcelookupmeshid",
+				"source(output(",
+				"          SpeciesID as short,",
+				"          SpeciesCode as string,",
+				"          Species as string",
+				"     ),",
+				"     allowSchemaDrift: false,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> sourcelookupspecies",
+				"source(output(",
+				"          LifeHistoryTypeID as string,",
+				"          LHType as string,",
+				"          LHCode as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> sourcelookylifehistory",
+				"source(output(",
+				"          MarkedFishTypeId as short,",
+				"          MarkedFishTypeCode as string,",
+				"          MarkedFishType as string",
+				"     ),",
+				"     allowSchemaDrift: false,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> sourcelookupmarkedfishtype",
+				"sourcedetailedcatch filter(!isNull(drift_date)",
+				"&& drift_number > 0 ",
+				"&& mesh_size >= 0",
+				"&& location != '' && !isNull(location) ",
+				"&& minute(toTimestamp(duration, 'HH:mm:ss')) > 0",
+				"&& toTimestamp(drift_start_time, 'HH:mm:ss') < toTimestamp(drift_end_time, 'HH:mm:ss')) ~> filtervalidrows",
+				"lookupmeshid, sourcesqldrift lookup(sourcedetailedcatch@drift_date == sourcesqldrift@drift_date",
+				"     && sourcedetailedcatch@drift_number == sourcesqldrift@drift_number",
+				"     && MeshId == mesh_id",
+				"     && LocationID == location_id,",
+				"     multiple: false,",
+				"     pickup: 'any',",
+				"     broadcast: 'auto')~> lookupdriftid",
+				"filtervalidrows, sourcelookuplocation lookup(location == LocationName,",
+				"     multiple: false,",
+				"     pickup: 'any',",
+				"     broadcast: 'auto')~> lookuplocationid",
+				"lookuplocationid, sourcelookupmeshid lookup(mesh_size == MeshSize,",
+				"     multiple: false,",
+				"     pickup: 'any',",
+				"     broadcast: 'auto')~> lookupmeshid",
+				"select1 unpivot(output(",
+				"          retention_species_type as string,",
+				"          catch_count as short",
+				"     ),",
+				"     ungroupBy(drift_id,",
+				"          drift_date,",
+				"          drift_number,",
+				"          location,",
+				"          drift_start_time,",
+				"          drift_end_time,",
+				"          duration,",
+				"          mesh_size),",
+				"     lateral: false,",
+				"     ignoreNullPivots: false) ~> unpivot1",
+				"unpivot1 derive(splitArray = split(lower(retention_species_type), '_'),",
+				"          isLHFirst = split(lower(retention_species_type), '_')[1] == 'adult' || split(lower(retention_species_type), '_')[1] == 'jack') ~> derivedColumn1",
+				"lookupdriftid select(mapColumn(",
+				"          drift_date = sourcedetailedcatch@drift_date,",
+				"          drift_number = sourcedetailedcatch@drift_number,",
+				"          drift_id,",
+				"          location,",
+				"          drift_start_time,",
+				"          drift_end_time,",
+				"          duration,",
+				"          mesh_size,",
+				"          adult_sockeye_retained,",
+				"          jack_sockeye_retained,",
+				"          adult_chinook_retained_ad_p,",
+				"          adult_chinook_retained_ad_a,",
+				"          adult_chinook_retained_ad_unk,",
+				"          jack_chinook_retained_ad_p,",
+				"          jack_chinook_retained_ad_a,",
+				"          jack_chinook_retained_ad_unk,",
+				"          coho_retained_ad_p,",
+				"          coho_retained_ad_a,",
+				"          coho_retained_ad_unk,",
+				"          pink_retained,",
+				"          chum_retained,",
+				"          steelhead_retained,",
+				"          adult_sockeye_released,",
+				"          jack_sockeye_released,",
+				"          adult_chinook_released_ad_p,",
+				"          adult_chinook_released_ad_a,",
+				"          adult_chinook_released_ad_unk,",
+				"          jack_chinook_released_ad_p,",
+				"          jack_chinook_released_ad_a,",
+				"          jack_chinook_released_ad_unk,",
+				"          coho_released_ad_p,",
+				"          coho_released_ad_a,",
+				"          coho_released_ad_unk,",
+				"          pink_released,",
+				"          chum_released,",
+				"          steelhead_released",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> select1",
+				"derivedColumn1 derive(life_history_key = iif(isLHFirst,splitArray[1],'none'),",
+				"          species_key = iif(isLHFirst, splitArray[2], splitArray[1]),",
+				"          retention_key = iif(\r",
+				"  isLHFirst,\r",
+				"  splitArray[3],\r",
+				"  splitArray[2]\r",
+				"),",
+				"          marking_token = iif(\r",
+				"  isLHFirst,\r",
+				"  iif(size(splitArray) == 5, splitArray[4] + '_' + splitArray[5], 'none'),\r",
+				"  iif(size(splitArray) == 4, splitArray[3] + '_' + splitArray[4], 'none')\r",
+				")) ~> derivedColumn2",
+				"derivedColumn2 derive(marking_code = iif(\r",
+				"  marking_token == 'ad_p', 'Unm',\r",
+				"    iif(marking_token == 'ad_a', 'ADC',\r",
+				"      iif(marking_token == 'ad_unk','UNK','UNK')\r",
+				"    )\r",
+				")) ~> derivedColumn3",
+				"derivedColumn3, sourcelookupspecies lookup(species_key == Species,",
+				"     multiple: false,",
+				"     pickup: 'any',",
+				"     broadcast: 'auto')~> lookup1",
+				"lookup1 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          date as string,",
+				"          count_hour as string,",
+				"          duration_minutes as string,",
+				"          up as string,",
+				"          down as string,",
+				"          net_up as string,",
+				"          salmon_per_hour as string,",
+				"          comments as string,",
+				"          sonar_config_id as string",
+				"     ),",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     partitionBy('hash', 1)) ~> sink1"
+			]
+		}
+	}
+}

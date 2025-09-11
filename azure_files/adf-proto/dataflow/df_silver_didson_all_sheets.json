@@ -1,0 +1,382 @@
+{
+	"name": "df_silver_didson_all_sheets",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "ds_bronze_didson_LB_HF",
+						"type": "DatasetReference"
+					},
+					"name": "sourceDidsonLBHF"
+				},
+				{
+					"dataset": {
+						"referenceName": "ds_bronze_didson_LB_LF",
+						"type": "DatasetReference"
+					},
+					"name": "sourceDidsonLBLF"
+				},
+				{
+					"dataset": {
+						"referenceName": "ds_bronze_didson_LB_LF_LR",
+						"type": "DatasetReference"
+					},
+					"name": "sourceDidsonLBLFLR"
+				},
+				{
+					"dataset": {
+						"referenceName": "ds_bronze_didson_RB_HF",
+						"type": "DatasetReference"
+					},
+					"name": "sourceDidsonRBHF"
+				},
+				{
+					"dataset": {
+						"referenceName": "ds_bronze_didson_RB_LF",
+						"type": "DatasetReference"
+					},
+					"name": "sourceDidsonRBLF"
+				},
+				{
+					"dataset": {
+						"referenceName": "ds_bronze_didson_RB_LF_LR",
+						"type": "DatasetReference"
+					},
+					"name": "sourceDidsonRBLFLR"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "ds_silver_didson_all_sheets",
+						"type": "DatasetReference"
+					},
+					"name": "sinkexportdidsontosilver",
+					"rejectedDataLinkedService": {
+						"referenceName": "ls_adls_stqualarkspeciescompcace",
+						"type": "LinkedServiceReference"
+					}
+				},
+				{
+					"dataset": {
+						"referenceName": "ds_error_sink_bronze",
+						"type": "DatasetReference"
+					},
+					"name": "sinkerrordata"
+				}
+			],
+			"transformations": [
+				{
+					"name": "addingsonordata1"
+				},
+				{
+					"name": "renamecolumns1"
+				},
+				{
+					"name": "addingsonordata2"
+				},
+				{
+					"name": "renamecolumns2"
+				},
+				{
+					"name": "addingsonordata3"
+				},
+				{
+					"name": "renamecolumns3"
+				},
+				{
+					"name": "addingsonordata4"
+				},
+				{
+					"name": "addingsonordata5"
+				},
+				{
+					"name": "addingsonordata6"
+				},
+				{
+					"name": "renamecolumns4"
+				},
+				{
+					"name": "renamecolumns5"
+				},
+				{
+					"name": "renamecolumns6"
+				},
+				{
+					"name": "union1"
+				},
+				{
+					"name": "validationStepAll"
+				},
+				{
+					"name": "splitValidInvalid"
+				},
+				{
+					"name": "adderrordetails"
+				},
+				{
+					"name": "selecterrordata"
+				}
+			],
+			"scriptLines": [
+				"parameters{",
+				"     p_run_id as string (\"\"),",
+				"     error_sink_filename as string (\"error.csv\")",
+				"}",
+				"source(output(",
+				"          Date as date,",
+				"          {Count Hour} as short,",
+				"          Duration as short,",
+				"          Up as short,",
+				"          Down as short,",
+				"          {Net Up} as short,",
+				"          {Salmon/Hour} as double,",
+				"          Comments as string",
+				"     ),",
+				"     allowSchemaDrift: false,",
+				"     validateSchema: true,",
+				"     ignoreNoFilesFound: false) ~> sourceDidsonLBHF",
+				"source(output(",
+				"          Date as date,",
+				"          {Count Hour} as short,",
+				"          Duration as short,",
+				"          Up as short,",
+				"          Down as short,",
+				"          {Net Up} as short,",
+				"          {Salmon/Hour} as double,",
+				"          Comments as string",
+				"     ),",
+				"     allowSchemaDrift: false,",
+				"     validateSchema: true,",
+				"     ignoreNoFilesFound: false) ~> sourceDidsonLBLF",
+				"source(output(",
+				"          Date as date,",
+				"          {Count Hour} as short,",
+				"          Duration as short,",
+				"          Up as short,",
+				"          Down as short,",
+				"          {Net Up} as short,",
+				"          {Salmon/Hour} as double,",
+				"          Comments as string",
+				"     ),",
+				"     allowSchemaDrift: false,",
+				"     validateSchema: true,",
+				"     ignoreNoFilesFound: false) ~> sourceDidsonLBLFLR",
+				"source(output(",
+				"          Date as date,",
+				"          {Count Hour} as short,",
+				"          Duration as short,",
+				"          Up as short,",
+				"          Down as short,",
+				"          {Net Up} as short,",
+				"          {Salmon/Hour} as double,",
+				"          Comments as string",
+				"     ),",
+				"     allowSchemaDrift: false,",
+				"     validateSchema: true,",
+				"     ignoreNoFilesFound: false) ~> sourceDidsonRBHF",
+				"source(output(",
+				"          Date as date,",
+				"          {Count Hour} as short,",
+				"          Duration as short,",
+				"          Up as short,",
+				"          Down as short,",
+				"          {Net Up} as short,",
+				"          {Salmon/Hour} as double,",
+				"          Comments as string",
+				"     ),",
+				"     allowSchemaDrift: false,",
+				"     validateSchema: true,",
+				"     ignoreNoFilesFound: false) ~> sourceDidsonRBLF",
+				"source(output(",
+				"          Date as date,",
+				"          {Count Hour} as short,",
+				"          Duration as short,",
+				"          Up as short,",
+				"          Down as short,",
+				"          {Net Up} as short,",
+				"          {Salmon/Hour} as double,",
+				"          Comments as string",
+				"     ),",
+				"     allowSchemaDrift: false,",
+				"     validateSchema: true,",
+				"     ignoreNoFilesFound: false) ~> sourceDidsonRBLFLR",
+				"sourceDidsonLBHF derive(system = \"DIDSON\",",
+				"          bank = \"Left Bank\",",
+				"          frequency_setting = \"High Frequency\") ~> addingsonordata1",
+				"addingsonordata1 select(mapColumn(",
+				"          date = Date,",
+				"          count_hour = {Count Hour},",
+				"          duration_minutes = Duration,",
+				"          up = Up,",
+				"          down = Down,",
+				"          net_up = {Net Up},",
+				"          salmon_per_hour = {Salmon/Hour},",
+				"          comments = Comments,",
+				"          system,",
+				"          bank,",
+				"          frequency_setting",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> renamecolumns1",
+				"sourceDidsonLBLF derive(system = \"DIDSON\",",
+				"          bank = \"Left Bank\",",
+				"          frequency_setting = \"Low Frequency\") ~> addingsonordata2",
+				"addingsonordata2 select(mapColumn(",
+				"          date = Date,",
+				"          count_hour = {Count Hour},",
+				"          duration_minutes = Duration,",
+				"          up = Up,",
+				"          down = Down,",
+				"          net_up = {Net Up},",
+				"          salmon_per_hour = {Salmon/Hour},",
+				"          comments = Comments,",
+				"          system,",
+				"          bank,",
+				"          frequency_setting",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> renamecolumns2",
+				"sourceDidsonLBLFLR derive(system = \"DIDSON\",",
+				"          bank = \"Left Bank\",",
+				"          frequency_setting = \"Low Frequency Low Resolution\") ~> addingsonordata3",
+				"addingsonordata3 select(mapColumn(",
+				"          date = Date,",
+				"          count_hour = {Count Hour},",
+				"          duration_minutes = Duration,",
+				"          up = Up,",
+				"          down = Down,",
+				"          net_up = {Net Up},",
+				"          salmon_per_hour = {Salmon/Hour},",
+				"          comments = Comments,",
+				"          system,",
+				"          bank,",
+				"          frequency_setting",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> renamecolumns3",
+				"sourceDidsonRBHF derive(system = \"DIDSON\",",
+				"          bank = \"Right Bank\",",
+				"          frequency_setting = \"High Frequency\") ~> addingsonordata4",
+				"sourceDidsonRBLF derive(system = \"DIDSON\",",
+				"          bank = \"Right Bank\",",
+				"          frequency_setting = \"Low Frequency\") ~> addingsonordata5",
+				"sourceDidsonRBLFLR derive(system = \"DIDSON\",",
+				"          bank = \"Right Bank\",",
+				"          frequency_setting = \"Low Frequency Low Resolution\") ~> addingsonordata6",
+				"addingsonordata4 select(mapColumn(",
+				"          date = Date,",
+				"          count_hour = {Count Hour},",
+				"          duration_minutes = Duration,",
+				"          up = Up,",
+				"          down = Down,",
+				"          net_up = {Net Up},",
+				"          salmon_per_hour = {Salmon/Hour},",
+				"          comments = Comments,",
+				"          system,",
+				"          bank,",
+				"          frequency_setting",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> renamecolumns4",
+				"addingsonordata5 select(mapColumn(",
+				"          date = Date,",
+				"          count_hour = {Count Hour},",
+				"          duration_minutes = Duration,",
+				"          up = Up,",
+				"          down = Down,",
+				"          net_up = {Net Up},",
+				"          salmon_per_hour = {Salmon/Hour},",
+				"          comments = Comments,",
+				"          system,",
+				"          bank,",
+				"          frequency_setting",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> renamecolumns5",
+				"addingsonordata6 select(mapColumn(",
+				"          date = Date,",
+				"          count_hour = {Count Hour},",
+				"          duration_minutes = Duration,",
+				"          up = Up,",
+				"          down = Down,",
+				"          net_up = {Net Up},",
+				"          salmon_per_hour = {Salmon/Hour},",
+				"          comments = Comments,",
+				"          system,",
+				"          bank,",
+				"          frequency_setting",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> renamecolumns6",
+				"renamecolumns1, renamecolumns2, renamecolumns3, renamecolumns4, renamecolumns5, renamecolumns6 union(byName: true)~> union1",
+				"union1 derive(reason_code = iif(\r",
+				"        (!isNull(date) && !isNull(toDate(toString(date), 'yyyy-MM-dd'))) &&\r",
+				"        (!isNull(count_hour) && toInteger(count_hour) >= 0 && toInteger(count_hour) <= 23) &&\r",
+				"        (!isNull(up) && toInteger(up) >= 0) &&\r",
+				"        (!isNull(down) && toInteger(down) >= 0) &&\r",
+				"        (!isNull(duration_minutes) && toInteger(duration_minutes) > 0),\r",
+				"        'None',\r",
+				"        'Invalid row: missing or out-of-range field(s)'\r",
+				"    ),",
+				"          pipeline_run_id = $p_run_id) ~> validationStepAll",
+				"validationStepAll split(reason_code == 'None',",
+				"     disjoint: false) ~> splitValidInvalid@(validbranch, Invalidbranch)",
+				"splitValidInvalid@Invalidbranch derive(error_timestamp = fromUTC(currentUTC('yyyyMMdd-HHmmss'),'Pacific Standard Time'),",
+				"          error_details = reason_code) ~> adderrordetails",
+				"adderrordetails select(mapColumn(",
+				"          date,",
+				"          count_hour,",
+				"          duration_minutes,",
+				"          up,",
+				"          down,",
+				"          net_up,",
+				"          salmon_per_hour,",
+				"          comments,",
+				"          system,",
+				"          bank,",
+				"          frequency_setting,",
+				"          pipeline_run_id,",
+				"          error_timestamp,",
+				"          error_details",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> selecterrordata",
+				"splitValidInvalid@validbranch sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     partitionFileNames:['Didson 2023 data.csv'],",
+				"     truncate: true,",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     mapColumn(",
+				"          date,",
+				"          count_hour,",
+				"          duration_minutes,",
+				"          up,",
+				"          down,",
+				"          net_up,",
+				"          salmon_per_hour,",
+				"          comments,",
+				"          system,",
+				"          bank,",
+				"          frequency_setting",
+				"     ),",
+				"     partitionBy('hash', 1)) ~> sinkexportdidsontosilver",
+				"selecterrordata sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     partitionFileNames:[($error_sink_filename)],",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     partitionBy('hash', 1)) ~> sinkerrordata"
+			]
+		}
+	}
+}

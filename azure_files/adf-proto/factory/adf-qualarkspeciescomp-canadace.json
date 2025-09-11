@@ -1,0 +1,9 @@
+{
+	"name": "adf-qualarkspeciescomp-canadace",
+	"location": "canadacentral",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "669cf7a2-9b2d-450f-9317-5866062a54b0",
+		"tenantId": "e58cdaa7-ea99-4e40-a7f2-473d60f0b830"
+	}
+}

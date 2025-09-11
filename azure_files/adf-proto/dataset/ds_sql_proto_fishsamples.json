@@ -1,0 +1,75 @@
+{
+	"name": "ds_sql_proto_fishsamples",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_sqldb_qualarkspeciescomp_proto",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "sql"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "fish_sample_id",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "drift_id",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "species_id",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "retention_type",
+				"type": "varchar"
+			},
+			{
+				"name": "life_history_type_id",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "catch_count",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "adipose_status",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "additional_info",
+				"type": "varchar"
+			},
+			{
+				"name": "created_at",
+				"type": "datetime",
+				"precision": 23,
+				"scale": 3
+			},
+			{
+				"name": "updated_at",
+				"type": "datetime",
+				"precision": 23,
+				"scale": 3
+			},
+			{
+				"name": "updated_by",
+				"type": "varchar"
+			}
+		],
+		"typeProperties": {
+			"schema": "dbo",
+			"table": "fish_samples"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

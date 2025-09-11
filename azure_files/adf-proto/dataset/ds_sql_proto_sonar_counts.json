@@ -1,0 +1,86 @@
+{
+	"name": "ds_sql_proto_sonar_counts",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_sqldb_qualarkspeciescomp_proto",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "sql"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "sonar_count_id",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "sonar_config_id",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "date",
+				"type": "date"
+			},
+			{
+				"name": "count_hour",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "duration_minutes",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "up",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "down",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "net_up",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "salmon_per_hour",
+				"type": "decimal",
+				"precision": 6,
+				"scale": 2
+			},
+			{
+				"name": "comments",
+				"type": "nvarchar"
+			},
+			{
+				"name": "created_at",
+				"type": "datetime",
+				"precision": 23,
+				"scale": 3
+			},
+			{
+				"name": "updated_at",
+				"type": "datetime",
+				"precision": 23,
+				"scale": 3
+			},
+			{
+				"name": "updated_by",
+				"type": "varchar"
+			}
+		],
+		"typeProperties": {
+			"schema": "dbo",
+			"table": "sonar_counts"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

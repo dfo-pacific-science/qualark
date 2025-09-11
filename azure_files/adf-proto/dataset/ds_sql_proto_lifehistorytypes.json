@@ -1,0 +1,34 @@
+{
+	"name": "ds_sql_proto_lifehistorytypes",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_sqldb_qualarkspeciescomp_proto",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "sql"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "life_history_type_id",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "lh_type",
+				"type": "varchar"
+			},
+			{
+				"name": "lh_code",
+				"type": "varchar"
+			}
+		],
+		"typeProperties": {
+			"schema": "dbo",
+			"table": "life_history_types"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

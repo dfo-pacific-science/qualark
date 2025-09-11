@@ -1,0 +1,109 @@
+{
+	"name": "df_insert_sonor_configurations_automatic",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "ds_silver_didsonYYYY_csv",
+						"type": "DatasetReference"
+					},
+					"name": "source1"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "ds_sql_proto_sonar_configurations",
+						"type": "DatasetReference"
+					},
+					"name": "sink1",
+					"rejectedDataLinkedService": {
+						"referenceName": "ls_adls_stqualarkspeciescompcace",
+						"type": "LinkedServiceReference"
+					}
+				}
+			],
+			"transformations": [
+				{
+					"name": "selectconfigcolumns"
+				},
+				{
+					"name": "aggregateuniqueconfigs"
+				},
+				{
+					"name": "addingsourceascomments"
+				},
+				{
+					"name": "removedtempminsystem"
+				}
+			],
+			"scriptLines": [
+				"parameters{",
+				"     p_run_id as string (\"\")",
+				"}",
+				"source(output(",
+				"          date as date,",
+				"          count_hour as short,",
+				"          duration_minutes as short,",
+				"          up as short,",
+				"          down as short,",
+				"          net_up as short,",
+				"          salmon_per_hour as double,",
+				"          comments as string,",
+				"          system as string,",
+				"          bank as string,",
+				"          frequency_setting as string",
+				"     ),",
+				"     allowSchemaDrift: false,",
+				"     validateSchema: true,",
+				"     ignoreNoFilesFound: false) ~> source1",
+				"source1 select(mapColumn(",
+				"          system,",
+				"          bank,",
+				"          frequency_setting",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> selectconfigcolumns",
+				"selectconfigcolumns aggregate(groupBy(system,",
+				"          bank,",
+				"          frequency_setting),",
+				"     minsystem = min(system)) ~> aggregateuniqueconfigs",
+				"removedtempminsystem derive(comments = \"Auto-generated from pipeline.\") ~> addingsourceascomments",
+				"aggregateuniqueconfigs select(mapColumn(",
+				"          system,",
+				"          bank,",
+				"          frequency_setting",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> removedtempminsystem",
+				"addingsourceascomments sink(allowSchemaDrift: false,",
+				"     validateSchema: false,",
+				"     input(",
+				"          sonar_config_id as integer,",
+				"          system as string,",
+				"          bank as string,",
+				"          frequency_setting as string,",
+				"          comments as string",
+				"     ),",
+				"     deletable:false,",
+				"     insertable:true,",
+				"     updateable:false,",
+				"     upsertable:false,",
+				"     format: 'table',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'allErrors',",
+				"     transactionCommit: 'batch',",
+				"     reportSuccessOnError: false,",
+				"     mapColumn(",
+				"          system,",
+				"          bank,",
+				"          frequency_setting,",
+				"          comments",
+				"     )) ~> sink1"
+			]
+		}
+	}
+}

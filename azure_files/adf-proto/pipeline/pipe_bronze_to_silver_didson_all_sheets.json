@@ -1,0 +1,363 @@
+{
+	"name": "pipe_bronze_to_silver_didson_all_sheets",
+	"properties": {
+		"activities": [
+			{
+				"name": "df_didson_all_sheets_to_silver",
+				"type": "ExecuteDataFlow",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataflow": {
+						"referenceName": "df_silver_didson_all_sheets",
+						"type": "DataFlowReference",
+						"parameters": {
+							"p_run_id": {
+								"value": "'@{pipeline().RunId}'",
+								"type": "Expression"
+							},
+							"error_sink_filename": {
+								"value": "'@{concat('invalid_didson_freq-', string(pipeline().RunId), '.csv')\n}'",
+								"type": "Expression"
+							}
+						},
+						"datasetParameters": {
+							"sourceDidsonLBHF": {
+								"folderPath": {
+									"value": "@pipeline().parameters.inputFolderPath",
+									"type": "Expression"
+								}
+							},
+							"sourceDidsonLBLF": {
+								"folderPath": "@pipeline().parameters.inputFolderPath"
+							},
+							"sourceDidsonLBLFLR": {
+								"folderPath": "@pipeline().parameters.inputFolderPath"
+							},
+							"sourceDidsonRBHF": {
+								"folderPath": "@pipeline().parameters.inputFolderPath"
+							},
+							"sourceDidsonRBLF": {
+								"folderPath": "@pipeline().parameters.inputFolderPath"
+							},
+							"sourceDidsonRBLFLR": {
+								"folderPath": "@pipeline().parameters.inputFolderPath"
+							},
+							"sinkerrordata": {
+								"runId": "\"\"",
+								"file_name": "errorFile_"
+							}
+						}
+					},
+					"compute": {
+						"coreCount": 8,
+						"computeType": "General"
+					},
+					"traceLevel": "Fine",
+					"continueOnError": true
+				}
+			},
+			{
+				"name": "df_insert_sonar_counts_to_sql",
+				"type": "ExecuteDataFlow",
+				"dependsOn": [
+					{
+						"activity": "df_didson_all_sheets_to_silver",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataflow": {
+						"referenceName": "df_insert_sonor_counts",
+						"type": "DataFlowReference",
+						"parameters": {
+							"p_run_id": {
+								"value": "'@{pipeline().RunId}'",
+								"type": "Expression"
+							},
+							"error_sink_filename": {
+								"value": "'@{concat('invalid_didson_id-', string(pipeline().RunId), '.csv')\n}'",
+								"type": "Expression"
+							}
+						},
+						"datasetParameters": {
+							"storeinvalidsonorcountid": {
+								"runId": {
+									"value": "@pipeline().RunId",
+									"type": "Expression"
+								},
+								"file_name": "errorFile_"
+							}
+						}
+					},
+					"compute": {
+						"coreCount": 8,
+						"computeType": "General"
+					},
+					"traceLevel": "Fine"
+				}
+			},
+			{
+				"name": "GetErrorFiles",
+				"type": "GetMetadata",
+				"dependsOn": [
+					{
+						"activity": "df_insert_sonar_counts_to_sql",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"dataset": {
+						"referenceName": "ds_error_sinkfolder_bronze",
+						"type": "DatasetReference",
+						"parameters": {
+							"runId": {
+								"value": "@pipeline().RunId",
+								"type": "Expression"
+							}
+						}
+					},
+					"fieldList": [
+						"childItems"
+					],
+					"storeSettings": {
+						"type": "AzureBlobFSReadSettings",
+						"recursive": true,
+						"enablePartitionDiscovery": false
+					},
+					"formatSettings": {
+						"type": "DelimitedTextReadSettings"
+					}
+				}
+			},
+			{
+				"name": "CheckErrorFiles",
+				"type": "IfCondition",
+				"dependsOn": [
+					{
+						"activity": "GetErrorFiles",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"expression": {
+						"value": "@greater(length(activity('GetErrorFiles').output.childItems), 0)",
+						"type": "Expression"
+					},
+					"ifFalseActivities": [
+						{
+							"name": "SetStatus_Success",
+							"type": "SetVariable",
+							"dependsOn": [],
+							"policy": {
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"variableName": "finalStatus",
+								"value": "Success"
+							}
+						},
+						{
+							"name": "NotifyLogicApp_ErrorFiles_copy1",
+							"type": "WebActivity",
+							"dependsOn": [
+								{
+									"activity": "SetStatus_Success",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"method": "POST",
+								"url": {
+									"value": "@pipeline().parameters.pLogicAppUrl",
+									"type": "Expression"
+								},
+								"body": {
+									"value": "{\n  \"PipelineStatus\": \"Success\",\n  \"PipelineRunId\": \"@{pipeline().RunId}\",\n  \"AzureFileLocation\": \"@{pipeline().parameters.pAzureFileLocation}\",\n  \"SharePointFolder\": \"@{pipeline().parameters.pSharePointFolder}\",\n  \"Extension\": \"@{pipeline().parameters.pExtension}\"\n}\n",
+									"type": "Expression"
+								}
+							}
+						}
+					],
+					"ifTrueActivities": [
+						{
+							"name": "SetStatus_SuccessWithErrorFiles",
+							"type": "SetVariable",
+							"dependsOn": [],
+							"policy": {
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"variableName": "finalStatus",
+								"value": "SuccessWithErrorFiles"
+							}
+						},
+						{
+							"name": "NotifyLogicApp_ErrorFiles",
+							"type": "WebActivity",
+							"dependsOn": [
+								{
+									"activity": "SetStatus_SuccessWithErrorFiles",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"method": "POST",
+								"url": {
+									"value": "@pipeline().parameters.pLogicAppUrl",
+									"type": "Expression"
+								},
+								"body": {
+									"value": "{\n  \"PipelineStatus\": \"SuccessWithErrorFiles\",\n  \"PipelineRunId\": \"@{pipeline().RunId}\",\n  \"AzureFileLocation\": \"@{pipeline().parameters.pAzureFileLocation}\",\n  \"SharePointFolder\": \"@{pipeline().parameters.pSharePointFolder}\",\n  \"Extension\": \"@{pipeline().parameters.pExtension}\"\n}\n",
+									"type": "Expression"
+								}
+							}
+						}
+					]
+				}
+			},
+			{
+				"name": "SetStatus_Failed",
+				"type": "SetVariable",
+				"dependsOn": [
+					{
+						"activity": "df_didson_all_sheets_to_silver",
+						"dependencyConditions": [
+							"Failed"
+						]
+					},
+					{
+						"activity": "df_insert_sonar_counts_to_sql",
+						"dependencyConditions": [
+							"Failed"
+						]
+					}
+				],
+				"policy": {
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "finalStatus",
+					"value": "Failed"
+				}
+			},
+			{
+				"name": "NotifyLogicApp_Failed",
+				"type": "WebActivity",
+				"dependsOn": [
+					{
+						"activity": "SetStatus_Failed",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"method": "POST",
+					"url": {
+						"value": "@pipeline().parameters.pLogicAppUrl",
+						"type": "Expression"
+					},
+					"body": {
+						"value": "{\n  \"PipelineStatus\": \"Failed\",\n  \"PipelineRunId\": \"@{pipeline().RunId}\",\n  \"AzureFileLocation\": \"@{pipeline().parameters.pAzureFileLocation}\",\n  \"SharePointFolder\": \"@{pipeline().parameters.pSharePointFolder}\",\n  \"Extension\": \"@{pipeline().parameters.pExtension}\"\n}\n",
+						"type": "Expression"
+					}
+				}
+			}
+		],
+		"parameters": {
+			"inputFolderPath": {
+				"type": "string",
+				"defaultValue": "Prototype/Qualark DIDSON Counts/20250219-121622"
+			},
+			"pLogicAppUrl": {
+				"type": "string",
+				"defaultValue": "https://prod-27.canadacentral.logic.azure.com:443/workflows/a2e353e8764b4cbbb7b07df8f3161c99/triggers/When_a_HTTP_request_is_received/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2FWhen_a_HTTP_request_is_received%2Frun&sv=1.0&sig=tVfjTd553nWAuxFmsNiUaCZuuSeWjuxYzEP4OaNrbmc"
+			},
+			"pSharePointFolder": {
+				"type": "string",
+				"defaultValue": "Failure"
+			},
+			"pAzureFileLocation": {
+				"type": "string",
+				"defaultValue": "Prototype/Failure"
+			},
+			"pExtension": {
+				"type": "string",
+				"defaultValue": ".csv"
+			}
+		},
+		"variables": {
+			"finalStatus": {
+				"type": "String"
+			}
+		},
+		"annotations": [],
+		"lastPublishTime": "2025-03-07T21:10:57Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

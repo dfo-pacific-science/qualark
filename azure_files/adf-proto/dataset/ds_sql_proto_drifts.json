@@ -1,0 +1,79 @@
+{
+	"name": "ds_sql_proto_drifts",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_sqldb_qualarkspeciescomp_proto",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "sql"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "drift_id",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "drift_date",
+				"type": "date"
+			},
+			{
+				"name": "drift_number",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "location_id",
+				"type": "char"
+			},
+			{
+				"name": "start_time",
+				"type": "time",
+				"scale": 7
+			},
+			{
+				"name": "end_time",
+				"type": "time",
+				"scale": 7
+			},
+			{
+				"name": "duration_minutes",
+				"type": "time",
+				"scale": 7
+			},
+			{
+				"name": "mesh_id",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "comments",
+				"type": "nvarchar"
+			},
+			{
+				"name": "created_at",
+				"type": "datetime",
+				"precision": 23,
+				"scale": 3
+			},
+			{
+				"name": "updated_at",
+				"type": "datetime",
+				"precision": 23,
+				"scale": 3
+			},
+			{
+				"name": "updated_by",
+				"type": "varchar"
+			}
+		],
+		"typeProperties": {
+			"schema": "dbo",
+			"table": "drifts"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

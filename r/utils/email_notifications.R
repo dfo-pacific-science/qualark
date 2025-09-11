@@ -1,79 +1,48 @@
-# Email Notification Utilities
-# Replaces Logic Apps email functionality
+# Enhanced Email Notifications for Qualark Pipeline
+# Handles sending notifications for pipeline status, errors, and comprehensive reporting
 
 library(mailR)
 library(here)
+library(logging)
+library(httr)
+library(jsonlite)
 
 source(here("r", "config", "connections.R"))
 
-# Function to send pipeline notification email
-send_pipeline_notification <- function(notification_data, logic_app_url = "") {
+# Global flag to enable/disable email operations
+# Set to TRUE when ready for production email integration
+ENABLE_EMAIL_OPERATIONS <- FALSE
+
+# Function to check if email operations are enabled
+is_email_enabled <- function() {
+  return(ENABLE_EMAIL_OPERATIONS)
+}
+
+# Function to send pipeline notification
+send_pipeline_notification <- function(status, message, details = NULL, run_id = "", attachments = NULL) {
   
-  # If logic_app_url is provided, send HTTP request (equivalent to Logic App)
-  if (logic_app_url != "") {
-    send_http_notification(notification_data, logic_app_url)
-    return()
+  if (!is_email_enabled()) {
+    loginfo("Email operations disabled - skipping notification")
+    return(list(status = "Skipped", message = "Email operations disabled"))
   }
   
-  # Otherwise, send email directly
-  send_email_notification(notification_data)
-}
-
-# Function to send HTTP notification (replaces Logic App call)
-send_http_notification <- function(notification_data, url) {
-  
-  library(httr)
-  library(jsonlite)
-  
   tryCatch({
+    # Get email configuration
+    email_config <- get_email_config()
     
-    # Prepare the request body
-    request_body <- list(
-      PipelineStatus = notification_data$PipelineStatus,
-      PipelineRunId = notification_data$PipelineRunId,
-      AzureFileLocation = notification_data$AzureFileLocation,
-      SharePointFolder = notification_data$SharePointFolder,
-      Extension = notification_data$Extension
-    )
-    
-    # Send POST request
-    response <- POST(
-      url = url,
-      body = request_body,
-      encode = "json",
-      add_headers("Content-Type" = "application/json")
-    )
-    
-    if (status_code(response) == 200) {
-      cat("Successfully sent HTTP notification\n")
-    } else {
-      cat("HTTP notification failed with status:", status_code(response), "\n")
+    if (is.null(email_config)) {
+      logwarn("Email configuration not available - skipping notification")
+      return(list(status = "Skipped", message = "Email configuration not available"))
     }
     
-  }, error = function(e) {
-    cat("Error sending HTTP notification:", e$message, "\n")
-  })
-}
-
-# Function to send email notification
-send_email_notification <- function(notification_data) {
-  
-  tryCatch({
-    
-    # Determine email content based on status
-    if (notification_data$PipelineStatus == "Success") {
-      subject <- "Pipeline Processed Successfully"
-      body <- create_success_email_body(notification_data)
-    } else if (notification_data$PipelineStatus == "SuccessWithErrorFiles") {
-      subject <- paste("Pipeline Processed with Errors -", notification_data$PipelineRunId)
-      body <- create_success_with_errors_email_body(notification_data)
-    } else if (notification_data$PipelineStatus == "Failed") {
-      subject <- "Pipeline Processing Failed"
-      body <- create_failed_email_body(notification_data)
-    } else {
-      subject <- "Pipeline Status Unknown"
-      body <- create_unknown_status_email_body(notification_data)
+    # Create email subject
+    subject <- paste("Qualark Pipeline", status, "-", format(Sys.time(), "%Y-%m-%d %H:%M:%S"))
+    if (run_id != "") {
+      subject <- paste(subject, "- Run ID:", run_id)
     }
+    
+    # Create email body
+    body <- create_email_body(status, message, details, run_id)
     
     # Send email
     send.mail(
@@ -81,6 +50,7 @@ send_email_notification <- function(notification_data) {
       to = email_config$to,
       subject = subject,
       body = body,
+      html = TRUE,
       smtp = list(
         host.name = email_config$smtp_server,
         port = email_config$port,
@@ -88,132 +58,301 @@ send_email_notification <- function(notification_data) {
         passwd = email_config$password,
         ssl = TRUE
       ),
-      authenticate = TRUE,
-      send = TRUE
+      attach.files = attachments
     )
     
-    cat("Successfully sent email notification\n")
+    loginfo(paste("Email notification sent successfully:", status))
+    return(list(status = "Success", message = "Email notification sent"))
     
   }, error = function(e) {
-    cat("Error sending email notification:", e$message, "\n")
+    logerror(paste("Error sending email notification:", e$message))
+    return(list(status = "Error", message = e$message))
   })
 }
 
-# Email body templates
-create_success_email_body <- function(data) {
-  paste0(
-    "<p>Dear Team,<br><br>",
-    "The pipeline completed successfully!<br>",
-    "Pipeline run ID: ", data$PipelineRunId, "<br><br>",
-    "No errors encountered.<br><br>",
-    "Thank you,<br>",
-    "Your Automated System</p>"
+# Function to create comprehensive email body
+create_email_body <- function(status, message, details = NULL, run_id = "") {
+  
+  # Status color coding
+  status_colors <- list(
+    "SUCCESS" = "#28a745",
+    "ERROR" = "#dc3545", 
+    "WARNING" = "#ffc107",
+    "INFO" = "#17a2b8",
+    "FAILED" = "#dc3545",
+    "SuccessWithErrorFiles" = "#ffc107"
   )
+  
+  color <- status_colors[[status]] %||% "#6c757d"
+  
+  body <- paste0(
+    "<!DOCTYPE html>",
+    "<html><head><style>",
+    "body { font-family: Arial, sans-serif; margin: 20px; }",
+    ".header { background-color: ", color, "; color: white; padding: 15px; border-radius: 5px; }",
+    ".content { margin: 20px 0; }",
+    ".details { background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 10px 0; }",
+    ".footer { font-size: 12px; color: #6c757d; margin-top: 30px; }",
+    "table { border-collapse: collapse; width: 100%; }",
+    "th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }",
+    "th { background-color: #f2f2f2; }",
+    "</style></head><body>",
+    
+    "<div class='header'>",
+    "<h2>Qualark Pipeline Notification</h2>",
+    "<p><strong>Status:</strong> ", status, "</p>",
+    "<p><strong>Time:</strong> ", format(Sys.time(), "%Y-%m-%d %H:%M:%S"), "</p>",
+    if (run_id != "") paste0("<p><strong>Run ID:</strong> ", run_id, "</p>"),
+    "</div>",
+    
+    "<div class='content'>",
+    "<h3>Message</h3>",
+    "<p>", message, "</p>"
+  )
+  
+  # Add details if provided
+  if (!is.null(details) && length(details) > 0) {
+    body <- paste0(body, "<h3>Details</h3><div class='details'>")
+    
+    if (is.list(details)) {
+      # Create table for structured details
+      body <- paste0(body, "<table><tr><th>Component</th><th>Status</th><th>Message</th></tr>")
+      for (name in names(details)) {
+        detail <- details[[name]]
+        if (is.list(detail)) {
+          status_text <- detail$status %||% "Unknown"
+          message_text <- detail$message %||% ""
+        } else {
+          status_text <- "Info"
+          message_text <- as.character(detail)
+        }
+        body <- paste0(body, "<tr><td>", name, "</td><td>", status_text, "</td><td>", message_text, "</td></tr>")
+      }
+      body <- paste0(body, "</table>")
+    } else {
+      # Simple list for basic details
+      body <- paste0(body, "<ul>")
+      for (detail in details) {
+        body <- paste0(body, "<li>", detail, "</li>")
+      }
+      body <- paste0(body, "</ul>")
+    }
+    
+    body <- paste0(body, "</div>")
+  }
+  
+  # Add system information
+  body <- paste0(body, 
+    "<h3>System Information</h3>",
+    "<div class='details'>",
+    "<p><strong>R Version:</strong> ", R.version.string, "</p>",
+    "<p><strong>Platform:</strong> ", R.version$platform, "</p>",
+    "<p><strong>Working Directory:</strong> ", getwd(), "</p>",
+    "</div>"
+  )
+  
+  body <- paste0(body,
+    "</div>",
+    
+    "<div class='footer'>",
+    "<p>This is an automated message from the Qualark Data Processing Pipeline.</p>",
+    "<p>For support or questions, contact the development team.</p>",
+    "</div>",
+    
+    "</body></html>"
+  )
+  
+  return(body)
 }
 
-create_success_with_errors_email_body <- function(data) {
-  paste0(
-    "<p>Dear Team,<br><br>",
-    "The pipeline completed with errors.<br>",
-    "Pipeline run ID: ", data$PipelineRunId, "<br><br>",
-    "Error files have been generated.<br>",
-    "Please review these files.<br><br>",
-    "Thank you,<br>",
-    "Your Automated System</p>"
+# Function to send comprehensive pipeline report
+send_pipeline_report <- function(pipeline_results, run_id = "") {
+  
+  if (!is_email_enabled()) {
+    loginfo("Email operations disabled - skipping pipeline report")
+    return(list(status = "Skipped", message = "Email operations disabled"))
+  }
+  
+  # Determine overall status
+  overall_status <- "SUCCESS"
+  if (pipeline_results$summary$failed_runs > 0) {
+    overall_status <- "FAILED"
+  } else if (pipeline_results$summary$successful_runs < pipeline_results$summary$total_runs) {
+    overall_status <- "WARNING"
+  }
+  
+  # Create detailed message
+  message <- paste0(
+    "Pipeline execution completed with ", 
+    pipeline_results$summary$successful_runs, " successful runs and ",
+    pipeline_results$summary$failed_runs, " failed runs."
   )
+  
+  # Create details from pipeline results
+  details <- list()
+  for (pipeline_name in names(pipeline_results$pipeline_results)) {
+    result <- pipeline_results$pipeline_results[[pipeline_name]]
+    details[[pipeline_name]] <- list(
+      status = result$status,
+      message = result$message
+    )
+  }
+  
+  return(send_pipeline_notification(
+    status = overall_status,
+    message = message,
+    details = details,
+    run_id = run_id
+  ))
 }
 
-create_failed_email_body <- function(data) {
-  paste0(
-    "<p>Dear Team,<br><br>",
-    "The pipeline has failed.<br>",
-    "Pipeline run ID: ", data$PipelineRunId, "<br><br>",
-    "Please check error logs for diagnosis.<br><br>",
-    "Thank you,<br>",
-    "Your Automated System</p>"
-  )
+# Function to send error notification with detailed information
+send_error_notification <- function(error_message, error_details = NULL, run_id = "", error_file = NULL) {
+  
+  attachments <- NULL
+  if (!is.null(error_file) && file.exists(error_file)) {
+    attachments <- error_file
+  }
+  
+  return(send_pipeline_notification(
+    status = "ERROR",
+    message = error_message,
+    details = error_details,
+    run_id = run_id,
+    attachments = attachments
+  ))
 }
 
-create_unknown_status_email_body <- function(data) {
-  paste0(
-    "<p>Dear Team,<br><br>",
-    "The pipeline completed with unknown status: ", data$PipelineStatus, "<br>",
-    "Pipeline run ID: ", data$PipelineRunId, "<br><br>",
-    "Please investigate.<br><br>",
-    "Thank you,<br>",
-    "Your Automated System</p>"
-  )
+# Function to send success notification
+send_success_notification <- function(success_message, details = NULL, run_id = "") {
+  
+  return(send_pipeline_notification(
+    status = "SUCCESS",
+    message = success_message,
+    details = details,
+    run_id = run_id
+  ))
 }
 
-# Function to send file upload notification
+# Function to send warning notification
+send_warning_notification <- function(warning_message, details = NULL, run_id = "") {
+  
+  return(send_pipeline_notification(
+    status = "WARNING",
+    message = warning_message,
+    details = details,
+    run_id = run_id
+  ))
+}
+
+# Function to send data quality report
+send_data_quality_report <- function(validation_results, run_id = "") {
+  
+  if (!is_email_enabled()) {
+    loginfo("Email operations disabled - skipping data quality report")
+    return(list(status = "Skipped", message = "Email operations disabled"))
+  }
+  
+  # Count validation results
+  total_files <- length(validation_results)
+  passed_files <- sum(sapply(validation_results, function(x) x$status == "Pass"))
+  failed_files <- total_files - passed_files
+  
+  # Determine status
+  if (failed_files == 0) {
+    status <- "SUCCESS"
+    message <- paste("Data quality validation passed for all", total_files, "files")
+  } else {
+    status <- "WARNING"
+    message <- paste("Data quality validation completed with", failed_files, "of", total_files, "files failing validation")
+  }
+  
+  return(send_pipeline_notification(
+    status = status,
+    message = message,
+    details = validation_results,
+    run_id = run_id
+  ))
+}
+
+# Function to send daily summary report
+send_daily_summary <- function(summary_data, run_id = "") {
+  
+  if (!is_email_enabled()) {
+    loginfo("Email operations disabled - skipping daily summary")
+    return(list(status = "Skipped", message = "Email operations disabled"))
+  }
+  
+  message <- paste0(
+    "Daily pipeline summary for ", format(Sys.Date(), "%Y-%m-%d"), 
+    ": ", summary_data$total_runs, " total runs, ",
+    summary_data$successful_runs, " successful, ",
+    summary_data$failed_runs, " failed"
+  )
+  
+  return(send_pipeline_notification(
+    status = "INFO",
+    message = message,
+    details = summary_data,
+    run_id = run_id
+  ))
+}
+
+# Legacy functions for backward compatibility
 send_file_upload_notification <- function(filename, run_id) {
-  
-  subject <- paste("File Loaded and Pipeline Initiated - runID:", run_id)
-  body <- paste0(
-    "<p>Dear Team,<br><br>",
-    "This is to notify you that the file \"", filename, "\" has been successfully loaded, ",
-    "and the corresponding data pipeline has been initiated, the reference run ID is: ", run_id, "<br><br>",
-    "Thank you,<br>",
-    "Your Automated System</p>"
-  )
-  
-  tryCatch({
-    send.mail(
-      from = email_config$from,
-      to = email_config$to,
-      subject = subject,
-      body = body,
-      smtp = list(
-        host.name = email_config$smtp_server,
-        port = email_config$port,
-        user.name = email_config$username,
-        passwd = email_config$password,
-        ssl = TRUE
-      ),
-      authenticate = TRUE,
-      send = TRUE
-    )
-    
-    cat("Successfully sent file upload notification\n")
-    
-  }, error = function(e) {
-    cat("Error sending file upload notification:", e$message, "\n")
-  })
+  return(send_success_notification(
+    paste("File", filename, "uploaded successfully and pipeline initiated"),
+    run_id = run_id
+  ))
 }
 
-# Function to send error notification for incorrect file
 send_incorrect_file_notification <- function(filename) {
-  
-  subject <- "Action Required: Incorrect File Uploaded"
-  body <- paste0(
-    "<p>Dear Team,<br><br>",
-    "It appears that the file \"", filename, "\" does not meet the required naming convention. ",
-    "Please ensure that the file follows the correct format (for example, \"Qualark_2023_DIDSON_Counts.xlsx\") ",
-    "and re-upload the correct version.<br><br>",
-    "Thank you for your prompt attention to this matter,<br>",
-    "Your Automated System</p>"
-  )
-  
-  tryCatch({
-    send.mail(
-      from = email_config$from,
-      to = email_config$to,
-      subject = subject,
-      body = body,
-      smtp = list(
-        host.name = email_config$smtp_server,
-        port = email_config$port,
-        user.name = email_config$username,
-        passwd = email_config$password,
-        ssl = TRUE
-      ),
-      authenticate = TRUE,
-      send = TRUE
+  return(send_error_notification(
+    paste("Incorrect file uploaded:", filename),
+    details = list(
+      "File does not meet naming convention",
+      "Please ensure file follows format: Qualark_2023_DIDSON_Counts.xlsx",
+      "Re-upload the correct version"
     )
-    
-    cat("Successfully sent incorrect file notification\n")
-    
-  }, error = function(e) {
-    cat("Error sending incorrect file notification:", e$message, "\n")
-  })
+  ))
+}
+
+# Function to enable email operations (flip switch)
+enable_email_operations <- function() {
+  ENABLE_EMAIL_OPERATIONS <<- TRUE
+  loginfo("Email operations ENABLED - all email functions will now execute")
+}
+
+# Function to disable email operations (flip switch)
+disable_email_operations <- function() {
+  ENABLE_EMAIL_OPERATIONS <<- FALSE
+  loginfo("Email operations DISABLED - all email functions will be skipped")
+}
+
+# Function to check email status
+get_email_status <- function() {
+  if (!is_email_enabled()) {
+    return(list(enabled = FALSE, message = "Email operations are disabled"))
+  }
+  
+  email_config <- get_email_config()
+  if (is.null(email_config)) {
+    return(list(enabled = TRUE, configured = FALSE, message = "Email operations enabled but configuration missing"))
+  }
+  
+  return(list(enabled = TRUE, configured = TRUE, message = "Email operations enabled and configured"))
+}
+
+# Test function
+if (interactive()) {
+  # Test email status
+  status <- get_email_status()
+  cat("Email Status:", status$message, "\n")
+  
+  # Test enabling/disabling
+  disable_email_operations()
+  cat("Email operations disabled\n")
+  
+  enable_email_operations()
+  cat("Email operations enabled\n")
 }

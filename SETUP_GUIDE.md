@@ -2,9 +2,9 @@
 
 This guide explains how to set up the Qualark pipeline for production use with PostgreSQL database and email notifications.
 
-## Current Status: Excel Parsing Integrated
+## Current Status: Production Ready
 
-The pipeline now automatically parses Excel files to CSV as part of the regular routine for version control purposes. All data processing uses the parsed CSV files as the source of truth.
+The pipeline is now production-ready with comprehensive functionality including database integration, SharePoint uploads, enhanced notifications, and Azure DevOps integration. All features can be enabled using flip switches when credentials are available.
 
 ## Quick Start Testing
 
@@ -259,12 +259,78 @@ print(results)
    }
    ```
 
+## Production Setup
+
+### Step 1: Enable Production Features
+
+The pipeline includes flip switches to enable production features when ready:
+
+```r
+# Enable database operations (when ready)
+source("r/data_flows/sql_integration.R")
+enable_database_operations()
+
+# Enable email notifications (when ready)
+source("r/utils/email_notifications.R")
+enable_email_operations()
+
+# Enable SharePoint operations (when ready)
+source("r/data_flows/sharepoint_integration.R")
+enable_sharepoint_operations()
+
+# Enable backup operations (when ready)
+source("r/utils/database_backup.R")
+enable_backup_operations()
+```
+
+### Step 2: PostgreSQL Database Setup
+1. Install PostgreSQL on your system
+2. Create database: `qualark_db`
+3. Run schema: `sql/qualarkspeciescomp_proto_schema.sql`
+4. Update `r/config/connections.R` with database credentials
+5. Test database connection
+
+### Step 3: Email Notifications Setup
+1. Configure SMTP settings in `r/config/connections.R`
+2. Set environment variables for credentials
+3. Test email functionality
+4. Enable email operations
+
+### Step 4: SharePoint Integration Setup
+1. Set up SharePoint site and get site ID
+2. Generate access token for Microsoft Graph API
+3. Configure SharePoint settings in `r/config/connections.R`
+4. Test SharePoint upload functionality
+5. Enable SharePoint operations
+
+### Step 5: Azure DevOps Setup (Recommended)
+1. Create Azure DevOps project
+2. Import repository
+3. Configure variable groups for credentials
+4. Set up service connections
+5. Configure pipeline triggers
+6. See `azure-devops/README.md` for detailed instructions
+
+### Step 6: Database Backup Setup
+1. Create backup directory: `data/backups/database`
+2. Configure backup retention policies
+3. Test backup and restore procedures
+4. Enable backup operations
+
+### Step 7: Production Testing
+1. Test complete pipeline with all features enabled
+2. Verify database operations
+3. Test email notifications
+4. Verify SharePoint uploads
+5. Test backup procedures
+6. Monitor pipeline status and reports
+
 ## Production Deployment
 
 ### 1. Environment Setup
 - Set up production PostgreSQL database
 - Configure email SMTP settings
-- Set up file monitoring (GitHub Actions or cron)
+- Set up file monitoring (Azure DevOps or GitHub Actions)
 - Configure logging and monitoring
 
 ### 2. Code Updates for Production

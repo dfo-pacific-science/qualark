@@ -1,0 +1,197 @@
+{
+	"name": "ds_silver_detailedcatch_csv",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_adls_stqualarkspeciescompcace",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "silver"
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": "qualark_testfishing_and_sampling.csv",
+				"folderPath": "Prototype/qualark_testfishing_and_sampling",
+				"fileSystem": "silver"
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "\\",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": [
+			{
+				"name": "drift_date",
+				"type": "String"
+			},
+			{
+				"name": "drift_number",
+				"type": "String"
+			},
+			{
+				"name": "location",
+				"type": "String"
+			},
+			{
+				"name": "drift_start_time",
+				"type": "String"
+			},
+			{
+				"name": "drift_end_time",
+				"type": "String"
+			},
+			{
+				"name": "duration",
+				"type": "String"
+			},
+			{
+				"name": "mesh_size",
+				"type": "String"
+			},
+			{
+				"name": "adult_sockeye_retained",
+				"type": "String"
+			},
+			{
+				"name": "jack_sockeye_retained",
+				"type": "String"
+			},
+			{
+				"name": "adult_chinook_retained_ad_p",
+				"type": "String"
+			},
+			{
+				"name": "adult_chinook_retained_ad_a",
+				"type": "String"
+			},
+			{
+				"name": "adult_chinook_retained_ad_unk",
+				"type": "String"
+			},
+			{
+				"name": "jack_chinook_retained_ad_p",
+				"type": "String"
+			},
+			{
+				"name": "jack_chinook_retained_ad_a",
+				"type": "String"
+			},
+			{
+				"name": "jack_chinook_retained_ad_unk",
+				"type": "String"
+			},
+			{
+				"name": "coho_retained_ad_p",
+				"type": "String"
+			},
+			{
+				"name": "coho_retained_ad_a",
+				"type": "String"
+			},
+			{
+				"name": "coho_retained_ad_unk",
+				"type": "String"
+			},
+			{
+				"name": "pink_retained",
+				"type": "String"
+			},
+			{
+				"name": "chum_retained",
+				"type": "String"
+			},
+			{
+				"name": "steelhead_retained",
+				"type": "String"
+			},
+			{
+				"name": "adult_sockeye_released",
+				"type": "String"
+			},
+			{
+				"name": "jack_sockeye_released",
+				"type": "String"
+			},
+			{
+				"name": "adult_chinook_released_ad_p",
+				"type": "String"
+			},
+			{
+				"name": "adult_chinook_released_ad_a",
+				"type": "String"
+			},
+			{
+				"name": "adult_chinook_released_ad_unk",
+				"type": "String"
+			},
+			{
+				"name": "jack_chinook_released_ad_p",
+				"type": "String"
+			},
+			{
+				"name": "jack_chinook_released_ad_a",
+				"type": "String"
+			},
+			{
+				"name": "jack_chinook_released_ad_unk",
+				"type": "String"
+			},
+			{
+				"name": "coho_released_ad_p",
+				"type": "String"
+			},
+			{
+				"name": "coho_released_ad_a",
+				"type": "String"
+			},
+			{
+				"name": "coho_released_ad_unk",
+				"type": "String"
+			},
+			{
+				"name": "pink_released",
+				"type": "String"
+			},
+			{
+				"name": "chum_released",
+				"type": "String"
+			},
+			{
+				"name": "steelhead_released",
+				"type": "String"
+			},
+			{
+				"name": "comments",
+				"type": "String"
+			},
+			{
+				"name": "total_adult_chinook_retained",
+				"type": "String"
+			},
+			{
+				"name": "total_jack_chinook_retained",
+				"type": "String"
+			},
+			{
+				"name": "total_adult_chinook_released",
+				"type": "String"
+			},
+			{
+				"name": "total_jack_chinook_released",
+				"type": "String"
+			},
+			{
+				"name": "total_coho_retained",
+				"type": "String"
+			},
+			{
+				"name": "total_coho_released",
+				"type": "String"
+			}
+		]
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

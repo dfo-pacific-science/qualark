@@ -1,0 +1,42 @@
+{
+	"name": "ds_sql_proto_sonar_configurations",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_sqldb_qualarkspeciescomp_proto",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "sql"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "sonar_config_id",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "system",
+				"type": "varchar"
+			},
+			{
+				"name": "bank",
+				"type": "varchar"
+			},
+			{
+				"name": "frequency_setting",
+				"type": "varchar"
+			},
+			{
+				"name": "comments",
+				"type": "nvarchar"
+			}
+		],
+		"typeProperties": {
+			"schema": "dbo",
+			"table": "sonar_configurations"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}
