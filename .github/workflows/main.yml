@@ -1,0 +1,33 @@
+name: Mirror to Azure DevOps
+
+on:
+  push:
+    branches:
+      - '**'   # mirror all branches
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout GitHub Repo
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # Important: fetch full history to avoid shallow errors
+
+      - name: Mirror to Azure DevOps
+        env:
+          ADO_SSH_KEY: ${{ secrets.ADO_SSH_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$ADO_SSH_KEY" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+
+          ssh-keyscan ssh.dev.azure.com >> ~/.ssh/known_hosts
+
+          git config user.name "GitHub Action"
+          git config user.email "actions@github.com"
+
+          git remote add azure "git@ssh.dev.azure.com:v3/foc-poc/Qualark%20Data%20Processing%20Pipeline/Qualark%20Data%20Processing%20Pipeline"
+
+          git push azure --all --force
+          git push azure --tags --force
