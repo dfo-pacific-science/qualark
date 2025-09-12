@@ -4,14 +4,12 @@
 
 ### Core Functionality
 - [x] Excel file parsing to CSV for version control
-- [x] Data structure analysis and correction
 - [x] Test fishing data processing pipeline
 - [x] DIDSON data processing pipeline
 - [x] Lookup table integration
 - [x] Input format validation
 - [x] Data quality validation
 - [x] Error handling and logging
-- [x] Modular testing framework
 - [x] Repository cleanup and organization
 
 ### Documentation
@@ -48,7 +46,9 @@
 - [ ] Configure database credentials and enable operations
 - [ ] Configure email credentials and enable notifications
 - [ ] Configure SharePoint credentials and enable operations
-- [ ] Set up Azure DevOps project and configure pipelines
+- [ ] Set up Azure DevOps project and configure CI/CD pipelines
+- [ ] Set up self-hosted agent on LxD container
+- [ ] Configure cron jobs on LxD for data processing
 - [ ] Test complete production workflow
 
 ### Optional Enhancements
@@ -56,45 +56,20 @@
 - [ ] Create data visualization tools
 - [ ] Add API endpoints for data access
 
-
 ## 🚀 Immediate Next Steps
 
 ### Week 1: Production Configuration
-1. **Configure Database**
-   - Set up PostgreSQL database
-   - Configure database credentials
-   - Enable database operations
-
-2. **Configure Email Notifications**
-   - Set up SMTP settings
-   - Configure email credentials
-   - Enable email operations
-
-3. **Configure SharePoint Integration**
-   - Set up SharePoint site
-   - Configure access credentials
-   - Enable SharePoint operations
+1. **Configure Database** - Set up PostgreSQL and enable operations
+2. **Configure Email** - Set up SMTP and enable notifications
+3. **Configure SharePoint** - Set up site and enable operations
 
 ### Week 2: Azure DevOps Setup
-1. **Create Azure DevOps Project**
-   - Import repository
-   - Configure variable groups
-   - Set up service connections
-
-2. **Configure Pipelines**
-   - Set up CI/CD pipelines
-   - Configure triggers and schedules
-   - Test pipeline execution
+1. **Create Project** - Import repository and configure variables
+2. **Set up Agent** - Install self-hosted agent on LxD
+3. **Configure Pipelines** - Set up CI/CD deployment
 
 ### Week 3: Production Testing
-1. **End-to-End Testing**
-   - Test complete workflow
-   - Verify all integrations
-   - Test error handling
-
-2. **Performance Testing**
-   - Test processing performance
-   - Verify backup procedures
-   - Test notification system
+1. **End-to-End Testing** - Test complete workflow
+2. **Performance Testing** - Verify processing and backup procedures
 
 

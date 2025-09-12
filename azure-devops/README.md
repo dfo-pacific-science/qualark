@@ -4,129 +4,105 @@ This directory contains Azure DevOps pipeline configurations and setup instructi
 
 ## Overview
 
-The Azure DevOps pipeline replaces the Azure Data Factory functionality with a more flexible, open-source approach while maintaining the same data processing capabilities.
+The Azure DevOps pipeline provides CI/CD deployment functionality to deploy code to the LxD container. Data processing is handled by cron jobs on the LxD instance, not by Azure DevOps compute resources.
 
 ## Pipeline Structure
 
 ### Main Pipeline: `qualark-data-pipeline.yml`
 
-The main pipeline consists of 5 stages:
+The main pipeline consists of 2 stages:
 
-1. **Validate** - Validates input data files
-2. **Process** - Processes Excel files and generates CSV outputs
-3. **Database** - Inserts processed data into PostgreSQL database
-4. **Notify** - Sends email notifications
-5. **Backup** - Creates database backups
+1. **Build** - Validates code and creates deployment artifacts
+2. **Deploy** - Deploys code to LxD container and sets up cron jobs
 
 ## Setup Instructions
 
 ### 1. Create Azure DevOps Project
 
 1. Go to [Azure DevOps](https://dev.azure.com)
-2. Create a new project named "Qualark Data Pipeline"
+2. Create a new project named "Qualark CI/CD"
 3. Import this repository into the project
 
 ### 2. Configure Variable Groups
 
 Create a variable group named `qualark-pipeline-variables` with the following variables:
 
-#### Database Variables
-- `DB_HOST` - PostgreSQL server hostname
-- `DB_PORT` - PostgreSQL port (default: 5432)
-- `DB_NAME` - Database name
-- `DB_USER` - Database username
-- `DB_PASSWORD` - Database password (mark as secret)
+#### LxD Deployment Variables
+- `LXD_HOST` - LxD container hostname or IP
+- `LXD_USER` - LxD username for deployment
+- `LXD_SSH_KEY` - SSH private key for LxD access (mark as secret)
 
-#### Email Variables
-- `EMAIL_SMTP_SERVER` - SMTP server hostname
+#### Optional Variables (for notifications)
+- `EMAIL_SMTP_SERVER` - SMTP server for deployment notifications
 - `EMAIL_PORT` - SMTP port (default: 587)
 - `EMAIL_USERNAME` - Email username
 - `EMAIL_PASSWORD` - Email password (mark as secret)
 - `EMAIL_FROM` - From email address
 - `EMAIL_TO` - Comma-separated list of recipient email addresses
 
-#### SharePoint Variables (Optional)
-- `SHAREPOINT_SITE_ID` - SharePoint site ID
-- `SHAREPOINT_TOKEN` - SharePoint access token (mark as secret)
+### 3. Set Up Self-Hosted Agent on LxD
 
-### 3. Create Service Connections
+#### Install Azure DevOps Agent
+1. Download the agent from Azure DevOps
+2. Install on LxD container
+3. Configure agent to run as service
+4. Add agent to the "LxD-SelfHosted" pool
 
-#### Database Service Connection
-1. Go to Project Settings > Service connections
-2. Create new service connection for PostgreSQL
-3. Configure connection details
-4. Test the connection
+#### Required Software on LxD
+- R 4.3.2 or later
+- Git
+- SSH access configured
+- Cron service running
 
-#### Email Service Connection
-1. Create service connection for SMTP
-2. Configure SMTP settings
-3. Test email sending
+### 4. Configure Pipeline
 
-### 4. Configure Pipeline Triggers
-
-#### File Upload Trigger
+#### Create Pipeline
 1. Go to Pipelines > Create Pipeline
 2. Select "Azure Repos Git"
 3. Choose your repository
 4. Select "Existing Azure Pipelines YAML file"
 5. Choose `azure-devops/pipelines/qualark-data-pipeline.yml`
 
-#### Scheduled Trigger
-1. Edit the pipeline YAML file
-2. Add schedule trigger:
-```yaml
-schedules:
-- cron: "0 6 * * *"  # Daily at 6 AM
-  displayName: Daily Data Processing
-  branches:
-    include:
-    - main
+#### Configure Triggers
+The pipeline triggers on:
+- Code changes to `r/*` directory
+- Changes to `azure-devops/*` files
+- Changes to documentation files
+- Pull requests to main branch
+
+### 5. Set Up Cron Jobs on LxD
+
+After deployment, configure cron jobs on LxD for data processing:
+
+#### Daily Processing (6 AM)
+```bash
+0 6 * * * cd /opt/qualark && Rscript r/main.R >> /var/log/qualark/qualark.log 2>&1
 ```
 
-### 5. Configure Build Agents
+#### Hourly Processing (if needed)
+```bash
+0 * * * * cd /opt/qualark && Rscript r/main.R >> /var/log/qualark/qualark.log 2>&1
+```
 
-#### Self-Hosted Agent (Recommended)
-1. Set up a self-hosted agent on your LxD container
-2. Install R and required packages
-3. Configure agent to run as service
-4. Add agent to the "ubuntu-latest" pool
-
-#### Microsoft-Hosted Agent
-- Uses Ubuntu 20.04
-- R and packages installed during pipeline execution
-- May have longer execution times
+#### Manual Processing
+```bash
+cd /opt/qualark
+Rscript r/main.R
+```
 
 ## Pipeline Stages Details
 
-### Stage 1: Validate
-- **Purpose**: Validates input data files before processing
-- **Duration**: ~2-3 minutes
-- **Dependencies**: None
-- **Outputs**: Validation results
-
-### Stage 2: Process
-- **Purpose**: Processes Excel files and generates CSV outputs
-- **Duration**: ~5-10 minutes
-- **Dependencies**: Validate stage
-- **Outputs**: Processed CSV files
-
-### Stage 3: Database
-- **Purpose**: Inserts processed data into PostgreSQL database
+### Stage 1: Build
+- **Purpose**: Validates code and creates deployment artifacts
 - **Duration**: ~3-5 minutes
-- **Dependencies**: Process stage
-- **Outputs**: Database records
+- **Dependencies**: None
+- **Outputs**: Code artifacts for deployment
 
-### Stage 4: Notify
-- **Purpose**: Sends email notifications about pipeline status
-- **Duration**: ~1-2 minutes
-- **Dependencies**: Process and Database stages
-- **Outputs**: Email notifications
-
-### Stage 5: Backup
-- **Purpose**: Creates database backups
+### Stage 2: Deploy
+- **Purpose**: Deploys code to LxD container and sets up cron jobs
 - **Duration**: ~2-3 minutes
-- **Dependencies**: Database stage
-- **Outputs**: Database backup files
+- **Dependencies**: Build stage
+- **Outputs**: Deployed code on LxD, cron job templates
 
 ## Monitoring and Alerts
 
@@ -134,36 +110,36 @@ schedules:
 1. Go to Pipelines > Pipelines
 2. Select your pipeline
 3. View run history and logs
-4. Set up notifications for failures
+4. Set up notifications for deployment failures
 
-### Email Notifications
-- Success notifications sent to configured email addresses
-- Error notifications include detailed error information
-- Daily summary reports available
+### Deployment Notifications
+- Deployment success/failure notifications
+- Code validation results
+- LxD deployment status
 
-### Database Monitoring
-- Database connection status monitored
-- Backup success/failure notifications
-- Data quality validation results
+### LxD Monitoring
+- Monitor cron job execution logs in `/var/log/qualark/`
+- Check R process status on LxD
+- Monitor data processing results
 
 ## Troubleshooting
 
 ### Common Issues
 
-#### R Package Installation Failures
-- Check internet connectivity
-- Verify package repository URLs
-- Consider using package caching
+#### LxD Connection Issues
+- Verify SSH connectivity to LxD
+- Check SSH key configuration
+- Ensure LxD agent is running
 
-#### Database Connection Issues
-- Verify database credentials
-- Check network connectivity
-- Ensure database server is running
+#### Deployment Failures
+- Check LxD disk space
+- Verify file permissions
+- Review deployment logs
 
-#### Email Notification Failures
-- Verify SMTP settings
-- Check email credentials
-- Test email sending manually
+#### R Package Installation Issues
+- Check R installation on LxD
+- Verify package repository access
+- Review package installation logs
 
 ### Debugging Steps
 
@@ -172,15 +148,15 @@ schedules:
    - Click on failed stage
    - Review detailed logs
 
-2. **Test Individual Components**
-   - Run validation stage only
-   - Test database connection separately
-   - Verify email configuration
+2. **Test LxD Connectivity**
+   - SSH to LxD manually
+   - Check agent status
+   - Verify R installation
 
-3. **Check Variable Values**
-   - Ensure all required variables are set
-   - Verify secret variables are properly configured
-   - Test variable substitution
+3. **Check Deployment**
+   - Verify code deployment in `/opt/qualark`
+   - Test R script execution
+   - Check cron job configuration
 
 ## Security Considerations
 
