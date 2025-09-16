@@ -8,10 +8,13 @@ create_directories <- function() {
   
   cat("Creating project directories...\n")
   
-  # Data directories
+  # Data directories (Medallion Architecture)
   data_dirs <- c(
+    "data/staging",  # Raw Excel files from Shiny app (permanent archival)
     "data/bronze/Prototype",
     "data/bronze/error_files",
+    "data/bronze/main_data",  # Parsed CSV files
+    "data/bronze/lookup_data",  # Parsed lookup CSV files
     "data/silver/didson_processed",
     "data/silver/qualark_testfishing_and_sampling",
     "data/silver/processed_drifts",
@@ -20,9 +23,8 @@ create_directories <- function() {
     "data/silver/error_logs",
     "data/silver/validation",
     "data/silver/reports",
-    "data/gold",
-    "data/sharepoint/Success",
-    "data/sharepoint/Failure"
+    "data/gold",     # Analytics-ready data (SQL database)
+    "data/backup"
   )
   
   for (dir in data_dirs) {
@@ -79,10 +81,8 @@ EMAIL_PASSWORD=your_email_password
 EMAIL_SMTP_SERVER=smtp.gmail.com
 EMAIL_SMTP_PORT=587
 
-# SharePoint Configuration (if using)
-SHAREPOINT_USERNAME=your_sharepoint_username
-SHAREPOINT_PASSWORD=your_sharepoint_password
-SHAREPOINT_SITE_URL=https://your-org.sharepoint.com/sites/YourSite
+# Local Storage Configuration (no external credentials needed)
+# Files are stored locally in temp/ and data/ folders
 
 # Notification URLs (if using webhooks)
 NOTIFICATION_WEBHOOK_URL=https://your-webhook-url.com/notify

@@ -15,14 +15,14 @@ The Qualark Data Processing Pipeline has been fully enhanced to replicate all Az
   - Flip switch: `enable_database_operations()` / `disable_database_operations()`
   - Comprehensive error handling and logging
 
-### 2. SharePoint Integration for Raw File Storage
-- **File**: `r/data_flows/sharepoint_integration.R`
+### 2. Local File Storage with Shiny App Interface
+- **File**: `shiny_app/app.R`
 - **Features**:
-  - Automatic upload of raw Excel files for provenance
-  - Organized folder structure by run ID
-  - Processed data and error file uploads
-  - Flip switch: `enable_sharepoint_operations()` / `disable_sharepoint_operations()`
-  - Microsoft Graph API integration
+  - Web-based file upload interface
+  - Local storage in temp folder
+  - File management and status monitoring
+  - Direct pipeline processing from web interface
+  - No external dependencies or security reviews required
 
 ### 3. Enhanced Email Notification System
 - **File**: `r/utils/email_notifications.R`
@@ -76,7 +76,7 @@ The Qualark Data Processing Pipeline has been fully enhanced to replicate all Az
 Excel Files → CSV Parsing → Data Validation → Processing → Silver Layer
 
 ### Enhanced Flow:
-Excel Files → CSV Parsing → **SharePoint Upload** → Data Validation → Processing → Silver Layer → **Database Insertion** → **Backup Creation** → **Notification** → **Status Reporting**
+Excel Files → **Shiny App Upload** → **Temp Storage** → CSV Parsing → Data Validation → Processing → Silver Layer → **Database Insertion** → **Backup Creation** → **Notification** → **Status Reporting**
 
 ## 🎛️ Flip Switches for Production Readiness
 
@@ -91,9 +91,7 @@ enable_database_operations()
 source("r/utils/email_notifications.R")
 enable_email_operations()
 
-# Enable SharePoint operations (when ready)
-source("r/data_flows/sharepoint_integration.R")
-enable_sharepoint_operations()
+# Local storage is always enabled - no configuration needed
 
 # Enable backup operations (when ready)
 source("r/utils/database_backup.R")
@@ -123,20 +121,20 @@ enable_backup_operations()
 ### 1. Configure Credentials
 - Set up PostgreSQL database and credentials
 - Configure email SMTP settings
-- Set up SharePoint site and access token
+- Deploy Shiny app for file uploads
 - Configure Azure DevOps project
 
 ### 2. Enable Production Features
 - Enable database operations
 - Enable email notifications
-- Enable SharePoint operations
+- Test Shiny app file uploads
 - Enable backup operations
 
 ### 3. Test Complete Workflow
 - Run full pipeline with all features enabled
 - Verify database operations
 - Test email notifications
-- Verify SharePoint uploads
+- Verify file uploads through Shiny app
 - Test backup procedures
 
 ### 4. Deploy to Production

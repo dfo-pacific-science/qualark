@@ -13,11 +13,13 @@ Thumbs.db
 .vscode/
 .idea/
 
-# Local data layers (not in repo)
-data/bronze/
-data/silver/
-data/gold/
-data/sharepoint/
+# Local data layers (Medallion Architecture - not in repo)
+data/staging/  # Raw Excel files from Shiny app
+data/bronze/   # Parsed CSV files
+data/silver/   # Processed/normalized data
+data/gold/     # Analytics-ready data (SQL database)
+data/backup/   # Backup files
+temp/          # Temporary files (legacy)
 
 # Logs and artifacts
 *.log

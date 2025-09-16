@@ -1,6 +1,6 @@
-# Parse Excel Files to CSV
-# This script converts all Excel files in prototype_data to CSV format
-# so we can see the actual data structure and version control the data
+# Parse Excel Files to CSV (Medallion Architecture)
+# This script converts Excel files from staging to bronze layer (CSV format)
+# Staging -> Bronze -> Silver -> Gold (SQL Database)
 
 library(here)
 library(readxl)
@@ -45,7 +45,7 @@ parse_excel_to_csv <- function(excel_file, output_dir) {
       header_candidates <- c("Date", "Drift", "Location", "Start Time", "End Time", "Duration", "Mesh Size")
       header_row <- NULL
       
-      for (i in 1:min(10, nrow(sheet_data))) {
+      for (i in seq_len(min(10, nrow(sheet_data)))) {
         row_data <- as.character(sheet_data[i, ])
         if (any(header_candidates %in% row_data, na.rm = TRUE)) {
           header_row <- i
@@ -106,22 +106,39 @@ parse_excel_to_csv <- function(excel_file, output_dir) {
   }
 }
 
-# Parse main data files
-cat("1. Parsing main data files...\n")
-main_files <- list.files("prototype_data", pattern = "\\.xlsx$", full.names = TRUE)
+# Parse main data files from staging folder (Medallion Architecture)
+cat("1. Parsing main data files from staging folder...\n")
+staging_dir <- "data/staging"
+if (!dir.exists(staging_dir)) {
+  cat("Staging directory not found, creating it...\n")
+  dir.create(staging_dir, recursive = TRUE, showWarnings = FALSE)
+}
+
+main_files <- list.files(staging_dir, pattern = "\\.xlsx$", full.names = TRUE)
 main_files <- main_files[!grepl("lookup", main_files)]
 
+if (length(main_files) == 0) {
+  cat("No Excel files found in staging folder. Checking prototype_data as fallback...\n")
+  main_files <- list.files("prototype_data", pattern = "\\.xlsx$", full.names = TRUE)
+  main_files <- main_files[!grepl("lookup", main_files)]
+}
+
 for (file in main_files) {
-  output_dir <- "data/csv_parsed/main_data"
+  output_dir <- "data/bronze/main_data"
   parse_excel_to_csv(file, output_dir)
 }
 
-# Parse lookup files
-cat("2. Parsing lookup files...\n")
-lookup_files <- list.files("prototype_data/lookup", pattern = "\\.xlsx$", full.names = TRUE)
+# Parse lookup files from staging folder
+cat("2. Parsing lookup files from staging folder...\n")
+lookup_files <- list.files(file.path(staging_dir, "lookup"), pattern = "\\.xlsx$", full.names = TRUE)
+
+if (length(lookup_files) == 0) {
+  cat("No lookup files found in staging/lookup. Checking prototype_data/lookup as fallback...\n")
+  lookup_files <- list.files("prototype_data/lookup", pattern = "\\.xlsx$", full.names = TRUE)
+}
 
 for (file in lookup_files) {
-  output_dir <- "data/csv_parsed/lookup_data"
+  output_dir <- "data/bronze/lookup_data"
   parse_excel_to_csv(file, output_dir)
 }
 
@@ -137,15 +154,15 @@ summary_data <- data.frame(
   stringsAsFactors = FALSE
 )
 
-# Analyze all generated CSV files
-csv_files <- list.files("data/csv_parsed", pattern = "\\.csv$", recursive = TRUE, full.names = TRUE)
+# Analyze all generated CSV files (Bronze layer)
+csv_files <- list.files("data/bronze", pattern = "\\.csv$", recursive = TRUE, full.names = TRUE)
 
 for (csv_file in csv_files) {
   tryCatch({
     data <- read.csv(csv_file, stringsAsFactors = FALSE)
     
     # Extract file info
-    relative_path <- gsub("data/csv_parsed/", "", csv_file)
+    relative_path <- gsub("data/bronze/", "", csv_file)
     file_parts <- strsplit(relative_path, "/")[[1]]
     file_name <- file_parts[length(file_parts)]
     
@@ -167,9 +184,9 @@ for (csv_file in csv_files) {
 }
 
 # Save summary
-write.csv(summary_data, "data/csv_parsed/data_structure_summary.csv", row.names = FALSE)
+write.csv(summary_data, "data/bronze/data_structure_summary.csv", row.names = FALSE)
 
-cat("Summary saved to: data/csv_parsed/data_structure_summary.csv\n")
+cat("Summary saved to: data/bronze/data_structure_summary.csv\n")
 cat("Files parsed:", nrow(summary_data), "\n\n")
 
 # Show summary
@@ -177,6 +194,6 @@ cat("Data Structure Summary:\n")
 print(summary_data)
 
 cat("\n=== PARSING COMPLETE ===\n")
-cat("All Excel files have been converted to CSV format.\n")
-cat("Check the 'data/csv_parsed' directory to see the actual data structure.\n")
+cat("All Excel files have been converted to CSV format (Bronze layer).\n")
+cat("Check the 'data/bronze' directory to see the actual data structure.\n")
 cat("Use the summary file to understand which files have proper headers.\n")

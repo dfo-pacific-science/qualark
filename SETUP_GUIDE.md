@@ -11,8 +11,8 @@ The pipeline is production-ready with comprehensive functionality. All features 
 - R 4.0+ installed
 - PostgreSQL database (for production)
 - SMTP email server (for notifications)
-- SharePoint site (for file backup)
 - Azure DevOps project (for CI/CD)
+- Shiny server (for file uploads)
 
 ## Quick Start Testing
 
@@ -47,15 +47,12 @@ results <- run_all_pipelines()
    enable_email_operations()
    ```
 
-### Step 3: SharePoint Integration
-1. Set up SharePoint site and get site ID
-2. Generate access token for Microsoft Graph API
-3. Configure SharePoint settings in `r/config/connections.R`
-4. Enable SharePoint operations:
-   ```r
-   source("r/data_flows/sharepoint_integration.R")
-   enable_sharepoint_operations()
-   ```
+### Step 3: Shiny App Integration
+1. Coordinate with your coworker to integrate their Shiny app
+2. Share the integration guide (`SHINY_APP_INTEGRATION.md`) with them
+3. Deploy the Shiny app to your LxD container (separate repository)
+4. Configure file upload permissions for the staging folder
+5. Test file upload and processing workflow
 
 ### Step 4: Azure DevOps CI/CD
 1. Create Azure DevOps project

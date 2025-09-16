@@ -1,0 +1,376 @@
+{
+  "didson_all_sheets_20250909_121013.csv": {
+    "total_rows": [5178],
+    "valid_rows": [5177],
+    "errors": [
+      ["Missing required columns: drift_date, drift_number, location"]
+    ],
+    "warnings": [],
+    "invalid_rows": [1]
+  },
+  "didson_all_sheets_20250909_121015.csv": {
+    "total_rows": [5178],
+    "valid_rows": [5177],
+    "errors": [
+      ["Missing required columns: drift_date, drift_number, location"]
+    ],
+    "warnings": [],
+    "invalid_rows": [1]
+  },
+  "life_history_types.csv": {
+    "total_rows": [2],
+    "valid_rows": [1],
+    "errors": [
+      ["Missing required columns: drift_date, drift_number, location"]
+    ],
+    "warnings": [],
+    "invalid_rows": [1]
+  },
+  "locations.csv": {
+    "total_rows": [2],
+    "valid_rows": [1],
+    "errors": [
+      ["Missing required columns: drift_date, drift_number, location"]
+    ],
+    "warnings": [],
+    "invalid_rows": [1]
+  },
+  "marked_fish_types.csv": {
+    "total_rows": [3],
+    "valid_rows": [2],
+    "errors": [
+      ["Missing required columns: drift_date, drift_number, location"]
+    ],
+    "warnings": [],
+    "invalid_rows": [1]
+  },
+  "mesh_sizes.csv": {
+    "total_rows": [10],
+    "valid_rows": [9],
+    "errors": [
+      ["Missing required columns: drift_date, drift_number, location"]
+    ],
+    "warnings": [],
+    "invalid_rows": [1]
+  },
+  "species.csv": {
+    "total_rows": [8],
+    "valid_rows": [7],
+    "errors": [
+      ["Missing required columns: drift_date, drift_number, location"]
+    ],
+    "warnings": [],
+    "invalid_rows": [1]
+  },
+  "didson_processed_20250909_121256.csv": {
+    "total_rows": [13347],
+    "valid_rows": [13346],
+    "errors": [
+      ["Missing required columns: drift_date, drift_number, location"]
+    ],
+    "warnings": [],
+    "invalid_rows": [1]
+  },
+  "didson_processed_20250909_121313.csv": {
+    "total_rows": [13347],
+    "valid_rows": [13346],
+    "errors": [
+      ["Missing required columns: drift_date, drift_number, location"]
+    ],
+    "warnings": [],
+    "invalid_rows": [1]
+  },
+  "didson_processed_20250909_121428.csv": {
+    "total_rows": [13347],
+    "valid_rows": [13346],
+    "errors": [
+      ["Missing required columns: drift_date, drift_number, location"]
+    ],
+    "warnings": [],
+    "invalid_rows": [1]
+  },
+  "didson_processed_20250909_121431.csv": {
+    "total_rows": [13347],
+    "valid_rows": [13346],
+    "errors": [
+      ["Missing required columns: drift_date, drift_number, location"]
+    ],
+    "warnings": [],
+    "invalid_rows": [1]
+  },
+  "didson_processed_20250909_121752.csv": {
+    "total_rows": [13347],
+    "valid_rows": [13346],
+    "errors": [
+      ["Missing required columns: drift_date, drift_number, location"]
+    ],
+    "warnings": [],
+    "invalid_rows": [1]
+  },
+  "didson_processed_20250909_121817.csv": {
+    "total_rows": [13347],
+    "valid_rows": [13346],
+    "errors": [
+      ["Missing required columns: drift_date, drift_number, location"]
+    ],
+    "warnings": [],
+    "invalid_rows": [1]
+  },
+  "drifts_processed_20250909_103801.csv": {
+    "total_rows": [551],
+    "valid_rows": [551],
+    "errors": [],
+    "warnings": [],
+    "invalid_rows": [0]
+  },
+  "drifts_processed_20250909_115817.csv": {
+    "total_rows": [551],
+    "valid_rows": [551],
+    "errors": [],
+    "warnings": [],
+    "invalid_rows": [0]
+  },
+  "drifts_processed_20250909_121014.csv": {
+    "total_rows": [551],
+    "valid_rows": [551],
+    "errors": [],
+    "warnings": [],
+    "invalid_rows": [0]
+  },
+  "drifts_processed_20250909_121312.csv": {
+    "total_rows": [551],
+    "valid_rows": [551],
+    "errors": [],
+    "warnings": [],
+    "invalid_rows": [0]
+  },
+  "drifts_processed_20250909_121430.csv": {
+    "total_rows": [551],
+    "valid_rows": [551],
+    "errors": [],
+    "warnings": [],
+    "invalid_rows": [0]
+  },
+  "drifts_processed_20250909_121703.csv": {
+    "total_rows": [551],
+    "valid_rows": [551],
+    "errors": [],
+    "warnings": [],
+    "invalid_rows": [0]
+  },
+  "drifts_processed_20250909_121817.csv": {
+    "total_rows": [551],
+    "valid_rows": [551],
+    "errors": [],
+    "warnings": [],
+    "invalid_rows": [0]
+  },
+  "drifts_processed_20250909_122223.csv": {
+    "total_rows": [551],
+    "valid_rows": [551],
+    "errors": [],
+    "warnings": [],
+    "invalid_rows": [0]
+  },
+  "fish_samples_processed_20250909_103133.csv": {
+    "total_rows": [956],
+    "valid_rows": [955],
+    "errors": [
+      ["Missing required columns: drift_date, drift_number, location"]
+    ],
+    "warnings": [],
+    "invalid_rows": [1]
+  },
+  "fish_samples_processed_20250909_103801.csv": {
+    "total_rows": [956],
+    "valid_rows": [955],
+    "errors": [
+      ["Missing required columns: drift_date, drift_number, location"]
+    ],
+    "warnings": [],
+    "invalid_rows": [1]
+  },
+  "fish_samples_processed_20250909_115817.csv": {
+    "total_rows": [956],
+    "valid_rows": [955],
+    "errors": [
+      ["Missing required columns: drift_date, drift_number, location"]
+    ],
+    "warnings": [],
+    "invalid_rows": [1]
+  },
+  "fish_samples_processed_20250909_121014.csv": {
+    "total_rows": [956],
+    "valid_rows": [955],
+    "errors": [
+      ["Missing required columns: drift_date, drift_number, location"]
+    ],
+    "warnings": [],
+    "invalid_rows": [1]
+  },
+  "fish_samples_processed_20250909_121312.csv": {
+    "total_rows": [956],
+    "valid_rows": [955],
+    "errors": [
+      ["Missing required columns: drift_date, drift_number, location"]
+    ],
+    "warnings": [],
+    "invalid_rows": [1]
+  },
+  "fish_samples_processed_20250909_121430.csv": {
+    "total_rows": [956],
+    "valid_rows": [955],
+    "errors": [
+      ["Missing required columns: drift_date, drift_number, location"]
+    ],
+    "warnings": [],
+    "invalid_rows": [1]
+  },
+  "fish_samples_processed_20250909_121703.csv": {
+    "total_rows": [956],
+    "valid_rows": [955],
+    "errors": [
+      ["Missing required columns: drift_date, drift_number, location"]
+    ],
+    "warnings": [],
+    "invalid_rows": [1]
+  },
+  "fish_samples_processed_20250909_121817.csv": {
+    "total_rows": [956],
+    "valid_rows": [955],
+    "errors": [
+      ["Missing required columns: drift_date, drift_number, location"]
+    ],
+    "warnings": [],
+    "invalid_rows": [1]
+  },
+  "fish_samples_processed_20250909_122223.csv": {
+    "total_rows": [956],
+    "valid_rows": [955],
+    "errors": [
+      ["Missing required columns: drift_date, drift_number, location"]
+    ],
+    "warnings": [],
+    "invalid_rows": [1]
+  },
+  "sonar_counts_processed_20250909_121256.csv": {
+    "total_rows": [297],
+    "valid_rows": [296],
+    "errors": [
+      ["Missing required columns: drift_date, drift_number, location"]
+    ],
+    "warnings": [],
+    "invalid_rows": [1]
+  },
+  "sonar_counts_processed_20250909_121313.csv": {
+    "total_rows": [297],
+    "valid_rows": [296],
+    "errors": [
+      ["Missing required columns: drift_date, drift_number, location"]
+    ],
+    "warnings": [],
+    "invalid_rows": [1]
+  },
+  "sonar_counts_processed_20250909_121428.csv": {
+    "total_rows": [297],
+    "valid_rows": [296],
+    "errors": [
+      ["Missing required columns: drift_date, drift_number, location"]
+    ],
+    "warnings": [],
+    "invalid_rows": [1]
+  },
+  "sonar_counts_processed_20250909_121431.csv": {
+    "total_rows": [297],
+    "valid_rows": [296],
+    "errors": [
+      ["Missing required columns: drift_date, drift_number, location"]
+    ],
+    "warnings": [],
+    "invalid_rows": [1]
+  },
+  "sonar_counts_processed_20250909_121752.csv": {
+    "total_rows": [297],
+    "valid_rows": [296],
+    "errors": [
+      ["Missing required columns: drift_date, drift_number, location"]
+    ],
+    "warnings": [],
+    "invalid_rows": [1]
+  },
+  "sonar_counts_processed_20250909_121817.csv": {
+    "total_rows": [297],
+    "valid_rows": [296],
+    "errors": [
+      ["Missing required columns: drift_date, drift_number, location"]
+    ],
+    "warnings": [],
+    "invalid_rows": [1]
+  },
+  "test_invalid_data.csv": {
+    "total_rows": [2],
+    "valid_rows": [2],
+    "errors": [],
+    "warnings": [
+      ["Column drift_date has type character but expected Date"],
+      ["Column location has 2 null values"]
+    ],
+    "invalid_rows": [0]
+  },
+  "testfishing_processed_20250909_103801.csv": {
+    "total_rows": [551],
+    "valid_rows": [551],
+    "errors": [],
+    "warnings": [],
+    "invalid_rows": [0]
+  },
+  "testfishing_processed_20250909_115817.csv": {
+    "total_rows": [551],
+    "valid_rows": [551],
+    "errors": [],
+    "warnings": [],
+    "invalid_rows": [0]
+  },
+  "testfishing_processed_20250909_121014.csv": {
+    "total_rows": [551],
+    "valid_rows": [551],
+    "errors": [],
+    "warnings": [],
+    "invalid_rows": [0]
+  },
+  "testfishing_processed_20250909_121312.csv": {
+    "total_rows": [551],
+    "valid_rows": [551],
+    "errors": [],
+    "warnings": [],
+    "invalid_rows": [0]
+  },
+  "testfishing_processed_20250909_121430.csv": {
+    "total_rows": [551],
+    "valid_rows": [551],
+    "errors": [],
+    "warnings": [],
+    "invalid_rows": [0]
+  },
+  "testfishing_processed_20250909_121703.csv": {
+    "total_rows": [551],
+    "valid_rows": [551],
+    "errors": [],
+    "warnings": [],
+    "invalid_rows": [0]
+  },
+  "testfishing_processed_20250909_121817.csv": {
+    "total_rows": [551],
+    "valid_rows": [551],
+    "errors": [],
+    "warnings": [],
+    "invalid_rows": [0]
+  },
+  "testfishing_processed_20250909_122223.csv": {
+    "total_rows": [551],
+    "valid_rows": [551],
+    "errors": [],
+    "warnings": [],
+    "invalid_rows": [0]
+  }
+}

@@ -206,7 +206,7 @@ Rscript r/main.R
 
 ### Data Backups
 - Processed data stored in multiple locations
-- SharePoint integration for file storage
+- Local file storage with Shiny app interface
 - Regular data integrity checks
 
 ## Maintenance

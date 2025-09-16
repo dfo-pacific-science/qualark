@@ -45,11 +45,11 @@
 ### Configuration Setup
 - [ ] Configure database credentials and enable operations
 - [ ] Configure email credentials and enable notifications
-- [ ] Configure SharePoint credentials and enable operations
+- [ ] Integrate coworker's Shiny app using integration guide
 - [ ] Set up Azure DevOps project and configure CI/CD pipelines
 - [ ] Set up self-hosted agent on LxD container
 - [ ] Configure cron jobs on LxD for data processing
-- [ ] Test complete production workflow
+- [ ] Test complete medallion architecture workflow
 
 ### Optional Enhancements
 - [ ] Set up monitoring dashboards
@@ -61,7 +61,7 @@
 ### Week 1: Production Configuration
 1. **Configure Database** - Set up PostgreSQL and enable operations
 2. **Configure Email** - Set up SMTP and enable notifications
-3. **Configure SharePoint** - Set up site and enable operations
+3. **Integrate Shiny App** - Coordinate with coworker using integration guide
 
 ### Week 2: Azure DevOps Setup
 1. **Create Project** - Import repository and configure variables

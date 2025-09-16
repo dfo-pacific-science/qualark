@@ -11,13 +11,14 @@ db_config <- list(
   driver = "ODBC Driver 17 for SQL Server"
 )
 
-# File storage configuration (replaces Azure Data Lake Storage)
+# File storage configuration (Medallion Architecture)
 storage_config <- list(
   type = "local",  # or "s3", "gcs", etc.
   base_path = "data",  # Local base path for data storage
-  bronze_path = "data/bronze",
-  silver_path = "data/silver",
-  gold_path = "data/gold"
+  staging_path = "data/staging",  # Raw Excel files from Shiny app
+  bronze_path = "data/bronze",    # Parsed CSV files
+  silver_path = "data/silver",    # Processed/normalized data
+  gold_path = "data/gold"         # Analytics-ready data (SQL database)
 )
 
 # Email configuration (replaces Office 365 connector)
@@ -30,11 +31,13 @@ email_config <- list(
   to = "madduri@psc.org"  # From the Logic Apps
 )
 
-# SharePoint configuration (replaces SharePoint connector)
-sharepoint_config <- list(
-  site_url = "https://your-org.sharepoint.com/sites/YourSite",
-  username = Sys.getenv("SHAREPOINT_USERNAME"),
-  password = Sys.getenv("SHAREPOINT_PASSWORD")
+# Local storage configuration (Medallion Architecture)
+local_storage_config <- list(
+  staging_path = "data/staging",  # Raw Excel files from Shiny app (permanent archival)
+  bronze_path = "data/bronze",    # Parsed CSV files
+  silver_path = "data/silver",    # Processed/normalized data
+  gold_path = "data/gold",        # Analytics-ready data (SQL database)
+  backup_path = "data/backup"     # Local backup location
 )
 
 # Function to get database connection
@@ -57,9 +60,10 @@ get_db_connection <- function() {
   return(conn)
 }
 
-# Function to get file path
+# Function to get file path (Medallion Architecture)
 get_file_path <- function(layer, subfolder = "", filename = "") {
   base_path <- switch(layer,
+    "staging" = storage_config$staging_path,
     "bronze" = storage_config$bronze_path,
     "silver" = storage_config$silver_path,
     "gold" = storage_config$gold_path,

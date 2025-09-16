@@ -4,9 +4,9 @@ A production-ready data processing system for DIDSON Sonar files and test fishin
 
 ## Overview
 
-Data flows from field collection → R Shiny Server upload → SharePoint backup → CSV parsing → validation → processing → PostgreSQL database. The system uses Azure DevOps for CI/CD deployment to LxD containers where cron jobs handle data processing.
+Data flows from field collection → Shiny App upload → **Staging** (raw Excel files) → **Bronze** (parsed CSV) → **Silver** (processed data) → **Gold** (SQL database). The system uses Azure DevOps for CI/CD deployment to LxD containers where cron jobs handle data processing.
 
-**Key Features**: Excel parsing, data validation, PostgreSQL integration, SharePoint backup, email notifications, automated testing, and production-ready flip switches.
+**Key Features**: Medallion architecture, Excel parsing, data validation, PostgreSQL integration, local file storage, email notifications, automated testing, and production-ready flip switches.
 
 ## Project Structure
 
@@ -18,8 +18,7 @@ qualark/
 │   ├── data_flows/                       # Data processing scripts
 │   │   ├── process_didson_data_corrected.R
 │   │   ├── process_testfishing_data_corrected.R
-│   │   ├── sql_integration.R             # Database operations
-│   │   └── sharepoint_integration.R     # SharePoint uploads
+│   │   └── sql_integration.R             # Database operations
 │   ├── utils/                            # Utility functions
 │   │   ├── email_notifications.R        # Enhanced email system
 │   │   ├── error_handling.R             # Error management
@@ -28,19 +27,19 @@ qualark/
 │   ├── parse_excel_to_csv.R             # Excel to CSV conversion utility
 │   ├── setup.R                          # Package installation and setup
 │   └── main.R                           # Main orchestration script
-├── data/                                # Data storage (replaces Azure Data Lake)
-│   ├── bronze/                          # Raw data layers 
-│   │   └── Prototype/                   # Sample data files
-│   ├── csv_parsed/                      # Parsed CSV files (version controlled)
+├── data/                                # Data storage (Medallion Architecture)
+│   ├── staging/                         # Raw Excel files from Shiny app (permanent archival)
+│   ├── bronze/                          # Parsed CSV files
+│   │   ├── main_data/                   # Main data files as CSV
 │   │   ├── lookup_data/                 # Lookup tables as CSV
-│   │   └── main_data/                   # Main data files as CSV
-│   ├── silver/                          # Processed data layer
+│   │   └── Prototype/                   # Sample data files
+│   ├── silver/                          # Processed/normalized data layer
 │   │   ├── processed_from_csv/          # Latest processed data
 │   │   ├── lookups_from_csv/            # Processed lookup tables
 │   │   ├── reports/                     # Pipeline summary reports
 │   │   └── validation/                  # Data quality validation results
-│   └── gold/                            # Analytics-ready data (future)
-├── prototype_data/                      # Original Excel files
+│   └── gold/                            # Analytics-ready data (SQL database)
+├── prototype_data/                      # Original Excel files (fallback)
 │   ├── lookup/                          # Lookup Excel files
 │   ├── Qualark_2023_DIDSON_Counts.xlsx
 │   └── Qualark_2023_Test_Fishing_and_Sampling.xlsx
@@ -66,16 +65,16 @@ qualark/
 - **Error Handling**: Comprehensive error logging and recovery
 - **Local Development**: Works without database or email dependencies
 - **Database Integration**: Complete PostgreSQL integration with flip switches
-- **SharePoint Integration**: Automatic upload of raw files for provenance
+- **Local File Storage**: Secure local storage for raw Excel files
 - **Enhanced Notifications**: Comprehensive email notification system
 - **Pipeline Status Management**: Real-time status tracking and reporting
 - **Database Backup**: Automated backup and recovery procedures
 - **Azure DevOps Integration**: Complete CI/CD pipeline configuration
 
-### 🔄 **Data Flow**
+### 🔄 **Data Flow (Medallion Architecture)**
 1. **Code Development** → **GitHub Push** → **Azure DevOps CI/CD** → **LxD Deployment** → **Cron Job Processing**
-2. **Excel Files Uploaded through Web Page** → **CSV Parsing** → **SharePoint Upload/Backup** → **Data Validation** → **Processing** → **Silver Layer**
-3. **Lookup Tables** → **CSV Parsing** → **Database Integration** → **Data Joining**
+2. **Excel Files Uploaded through Shiny App** → **Staging** (raw Excel files) → **Bronze** (parsed CSV) → **Silver** (processed data) → **Gold** (SQL database)
+3. **Lookup Tables** → **Bronze Layer** → **Silver Layer** → **Database Integration** → **Data Joining**
 4. **Quality Validation** → **Database Insertion** → **Backup Creation** → **Notification** → **Summary Generation**
 
 ## Documentation
@@ -126,22 +125,23 @@ Rscript r/main.R validate
 
 ## Data Processing
 
-### Test Fishing Data
-- **Input**: `prototype_data/Qualark_2023_Test_Fishing_and_Sampling.xlsx`
-- **Processing**: Detailed Catch sheet → Drifts + Fish Samples
-- **Output**: 
-  - `data/silver/processed_from_csv/drifts_processed_[timestamp].csv`
-  - `data/silver/processed_from_csv/fish_samples_processed_[timestamp].csv`
+### Test Fishing Data (Medallion Architecture)
+- **Input**: `data/staging/Qualark_2023_Test_Fishing_and_Sampling.xlsx` (from Shiny app)
+- **Bronze**: `data/bronze/main_data/Qualark_2023_Test_Fishing_and_Sampling_*.csv`
+- **Silver**: `data/silver/processed_from_csv/drifts_processed_[timestamp].csv` + `fish_samples_processed_[timestamp].csv`
+- **Gold**: PostgreSQL database tables
 
-### DIDSON Data
-- **Input**: `prototype_data/Qualark_2023_DIDSON_Counts.xlsx`
-- **Processing**: Multiple sheets → Consolidated DIDSON data
-- **Output**: `data/silver/processed_from_csv/didson_processed_[timestamp].csv`
+### DIDSON Data (Medallion Architecture)
+- **Input**: `data/staging/Qualark_2023_DIDSON_Counts.xlsx` (from Shiny app)
+- **Bronze**: `data/bronze/main_data/Qualark_2023_DIDSON_Counts_*.csv`
+- **Silver**: `data/silver/processed_from_csv/didson_processed_[timestamp].csv`
+- **Gold**: PostgreSQL database tables
 
-### Lookup Tables
-- **Input**: `prototype_data/lookup/*.xlsx`
-- **Processing**: Excel → CSV → Integration
-- **Output**: `data/silver/lookups_from_csv/*.csv`
+### Lookup Tables (Medallion Architecture)
+- **Input**: `data/staging/lookup/*.xlsx` (from Shiny app)
+- **Bronze**: `data/bronze/lookup_data/*.csv`
+- **Silver**: `data/silver/lookups_from_csv/*.csv`
+- **Gold**: PostgreSQL lookup tables
 
 ## Configuration
 
@@ -158,9 +158,6 @@ enable_database_operations()
 source("r/utils/email_notifications.R")
 enable_email_operations()
 
-# Enable SharePoint operations (when ready)
-source("r/data_flows/sharepoint_integration.R")
-enable_sharepoint_operations()
 
 # Enable backup operations (when ready)
 source("r/utils/database_backup.R")
@@ -196,14 +193,16 @@ email_config <- list(
 )
 ```
 
-### SharePoint Configuration
-Configure SharePoint integration in `r/config/connections.R`:
+### Local Storage Configuration (Medallion Architecture)
+Configure local storage paths in `r/config/connections.R`:
 
 ```r
-sharepoint_config <- list(
-  site_id = Sys.getenv("SHAREPOINT_SITE_ID"),
-  token = Sys.getenv("SHAREPOINT_TOKEN"),
-  base_url = "https://graph.microsoft.com/v1.0/sites"
+local_storage_config <- list(
+  staging_path = "data/staging",  # Raw Excel files from Shiny app (permanent archival)
+  bronze_path = "data/bronze",    # Parsed CSV files
+  silver_path = "data/silver",    # Processed/normalized data
+  gold_path = "data/gold",        # Analytics-ready data (SQL database)
+  backup_path = "data/backup"     # Local backup location
 )
 ```
 
@@ -226,9 +225,9 @@ For detailed production setup instructions, see **[SETUP_GUIDE.md](SETUP_GUIDE.m
 ### Quick Setup Checklist
 - [ ] Configure database credentials in `r/config/connections.R`
 - [ ] Set up email SMTP settings
-- [ ] Configure SharePoint integration
 - [ ] Set up Azure DevOps CI/CD pipeline
 - [ ] Configure LxD cron jobs for data processing
+- [ ] Deploy Shiny app for file uploads
 
 ### Flip Switches
 Enable production features when ready:
@@ -241,9 +240,6 @@ enable_database_operations()
 source("r/utils/email_notifications.R")
 enable_email_operations()
 
-# Enable SharePoint operations
-source("r/data_flows/sharepoint_integration.R")
-enable_sharepoint_operations()
 ```
 
 ## Troubleshooting

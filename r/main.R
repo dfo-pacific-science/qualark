@@ -13,25 +13,36 @@ source(here("r", "config", "connections.R"))
 source(here("r", "data_flows", "process_didson_data_corrected.R"))
 source(here("r", "data_flows", "process_testfishing_data_corrected.R"))
 source(here("r", "data_flows", "sql_integration.R"))
-source(here("r", "data_flows", "sharepoint_integration.R"))
+# SharePoint integration removed - using local storage instead
 source(here("r", "utils", "email_notifications.R"))
 source(here("r", "utils", "error_handling.R"))
 source(here("r", "utils", "pipeline_status.R"))
 source(here("r", "utils", "database_backup.R"))
 
-# Function to parse Excel files to CSV with validation
-parse_excel_files_with_validation <- function(excel_source_dir = "prototype_data") {
+# Function to parse Excel files to CSV with validation (Medallion Architecture)
+parse_excel_files_with_validation <- function(excel_source_dir = "data/staging") {
   
-  loginfo("Parsing Excel files to CSV with validation")
+  loginfo("Parsing Excel files to CSV with validation from staging folder (Bronze layer)")
   
-  # Check if source directory exists
+  # Check if staging directory exists, create if not
   if (!dir.exists(excel_source_dir)) {
-    logerror(paste("Excel source directory not found:", excel_source_dir))
-    return(list(status = "Error", message = "Excel source directory not found"))
+    loginfo(paste("Staging directory not found, creating:", excel_source_dir))
+    dir.create(excel_source_dir, recursive = TRUE, showWarnings = FALSE)
   }
   
-  # Check if CSV files already exist and are recent
-  csv_dir <- "data/csv_parsed"
+  # Check if there are files in staging, fallback to prototype_data if empty
+  staging_files <- list.files(excel_source_dir, pattern = "\\.xlsx$", recursive = TRUE, full.names = TRUE)
+  if (length(staging_files) == 0) {
+    loginfo("No Excel files found in staging folder, using prototype_data as fallback")
+    excel_source_dir <- "prototype_data"
+    if (!dir.exists(excel_source_dir)) {
+      logerror(paste("Excel source directory not found:", excel_source_dir))
+      return(list(status = "Error", message = "Excel source directory not found"))
+    }
+  }
+  
+  # Check if CSV files already exist and are recent (Bronze layer)
+  csv_dir <- "data/bronze"
   if (dir.exists(csv_dir)) {
     csv_files <- list.files(csv_dir, pattern = "\\.csv$", recursive = TRUE, full.names = TRUE)
     if (length(csv_files) > 0) {
@@ -42,8 +53,8 @@ parse_excel_files_with_validation <- function(excel_source_dir = "prototype_data
         csv_mtime <- max(file.mtime(csv_files))
         
         if (csv_mtime > excel_mtime) {
-          loginfo("CSV files are up to date, skipping Excel parsing")
-          return(list(status = "Success", message = "CSV files are up to date"))
+          loginfo("Bronze layer CSV files are up to date, skipping Excel parsing")
+          return(list(status = "Success", message = "Bronze layer CSV files are up to date"))
         }
       }
     }
@@ -67,12 +78,12 @@ validate_input_format <- function() {
   
   validation_results <- list()
   
-  # Check if required CSV files exist
+  # Check if required CSV files exist (Bronze layer)
   required_files <- c(
-    "data/csv_parsed/main_data/Qualark_2023_Test_Fishing_and_Sampling_Detailed_Catch_with_headers.csv",
-    "data/csv_parsed/lookup_data/DriftLocation_Sheet1_raw.csv",
-    "data/csv_parsed/lookup_data/Species_Species_raw.csv",
-    "data/csv_parsed/lookup_data/MeshSizes_MeshSizes_raw.csv"
+    "data/bronze/main_data/Qualark_2023_Test_Fishing_and_Sampling_Detailed_Catch_with_headers.csv",
+    "data/bronze/lookup_data/DriftLocation_Sheet1_raw.csv",
+    "data/bronze/lookup_data/Species_Species_raw.csv",
+    "data/bronze/lookup_data/MeshSizes_MeshSizes_raw.csv"
   )
   
   for (file in required_files) {
@@ -206,20 +217,8 @@ run_all_pipelines <- function() {
       add_error("Parse", parse_result$message)
     }
     
-    # Stage 2: Upload raw files to SharePoint
-    loginfo("Stage 2: Uploading raw files to SharePoint")
-    update_stage_status("SharePoint", "Running", "Uploading raw files to SharePoint")
-    
-    sharepoint_result <- upload_raw_files_to_sharepoint(run_id)
-    if (sharepoint_result$status == "Success") {
-      update_stage_status("SharePoint", "Success", "Raw files uploaded to SharePoint")
-    } else {
-      update_stage_status("SharePoint", "Warning", sharepoint_result$message)
-      add_warning("SharePoint", sharepoint_result$message)
-    }
-    
-    # Stage 3: Process Test Fishing data
-    loginfo("Stage 3: Processing Test Fishing data")
+    # Stage 2: Process Test Fishing data
+    loginfo("Stage 2: Processing Test Fishing data")
     update_stage_status("TestFishing", "Running", "Processing test fishing data")
     
     results$testfishing <- run_testfishing_pipeline_corrected()
@@ -230,8 +229,8 @@ run_all_pipelines <- function() {
       add_error("TestFishing", results$testfishing$message)
     }
     
-    # Stage 4: Process DIDSON data
-    loginfo("Stage 4: Processing DIDSON data")
+    # Stage 3: Process DIDSON data
+    loginfo("Stage 3: Processing DIDSON data")
     update_stage_status("DIDSON", "Running", "Processing DIDSON data")
     
     results$didson <- run_didson_pipeline_corrected()
@@ -242,8 +241,8 @@ run_all_pipelines <- function() {
       add_warning("DIDSON", results$didson$message)
     }
     
-    # Stage 5: Database operations
-    loginfo("Stage 5: Database operations")
+    # Stage 4: Database operations
+    loginfo("Stage 4: Database operations")
     update_stage_status("Database", "Running", "Inserting data to database")
     
     # Populate lookup tables
@@ -267,8 +266,8 @@ run_all_pipelines <- function() {
       }
     }
     
-    # Stage 6: Data quality validation
-    loginfo("Stage 6: Data quality validation")
+    # Stage 5: Data quality validation
+    loginfo("Stage 5: Data quality validation")
     update_stage_status("Validation", "Running", "Validating data quality")
     
     validation_result <- validate_all_data()
@@ -278,8 +277,8 @@ run_all_pipelines <- function() {
       update_stage_status("Validation", "Warning", "No validation results generated")
     }
     
-    # Stage 7: Create database backup
-    loginfo("Stage 7: Creating database backup")
+    # Stage 6: Create database backup
+    loginfo("Stage 6: Creating database backup")
     update_stage_status("Backup", "Running", "Creating database backup")
     
     backup_result <- create_database_backup("full", run_id)
@@ -290,8 +289,8 @@ run_all_pipelines <- function() {
       add_warning("Backup", backup_result$message)
     }
     
-    # Stage 8: Send notifications
-    loginfo("Stage 8: Sending notifications")
+    # Stage 7: Send notifications
+    loginfo("Stage 7: Sending notifications")
     update_stage_status("Notifications", "Running", "Sending notifications")
     
     # Send status notifications
