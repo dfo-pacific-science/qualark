@@ -71,12 +71,6 @@ results <- run_all_pipelines()
 
 ## Troubleshooting
 
-### Common Issues
-- **Excel Parsing**: Check file paths and format in `prototype_data/`
-- **Database Connection**: Verify PostgreSQL is running and credentials are correct
-- **Email Notifications**: Check SMTP settings and authentication
-- **Data Validation**: Review validation rules and data format
-
 ### Logs and Reports
 - **Validation**: `data/silver/validation/validation_results_*.json`
 - **Reports**: `data/silver/reports/pipeline_summary_*.json`
