@@ -45,31 +45,29 @@
 ### Configuration Setup
 - [ ] Configure database credentials and enable operations
 - [ ] Configure email credentials and enable notifications
-- [ ] Integrate coworker's Shiny app using integration guide
+- [ ] Integrate Shiny app using integration guide
 - [ ] Set up Azure DevOps project and configure CI/CD pipelines
 - [ ] Set up self-hosted agent on LxD container
 - [ ] Configure cron jobs on LxD for data processing
 - [ ] Test complete medallion architecture workflow
 
 ### Optional Enhancements
-- [ ] Set up monitoring dashboards
-- [ ] Create data visualization tools
+- [ ] Set up monitoring dashboard
 - [ ] Add API endpoints for data access
 
 ## 🚀 Immediate Next Steps
 
-### Week 1: Production Configuration
-1. **Configure Database** - Set up PostgreSQL and enable operations
-2. **Configure Email** - Set up SMTP and enable notifications
-3. **Integrate Shiny App** - Coordinate with coworker using integration guide
+### Production Configuration
+1. **Configure Database** - Set up PostgreSQL and enable operations (after Sai's updates)
+2. **Configure Email** - Set up SMTP and enable notifications (Waiting on IT)
+3. **Integrate Shiny App** - Coordinate with Curtis on integration guide 
 
-### Week 2: Azure DevOps Setup
-1. **Create Project** - Import repository and configure variables
-2. **Set up Agent** - Install self-hosted agent on LxD
-3. **Configure Pipelines** - Set up CI/CD deployment
+### Azure DevOps Setup
+1. **Create Project** - Import repository and configure variables (Wu)
+2. **Set up Agent** - Install self-hosted agent on LxD (Wu)
+3. **Configure Pipelines** - Set up CI/CD deployment (Wu)
 
-### Week 3: Production Testing
-1. **End-to-End Testing** - Test complete workflow
-2. **Performance Testing** - Verify processing and backup procedures
+### Production Testing
+1. **End-to-End Testing** - Test complete workflow (Curtis)
 
 
